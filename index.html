@@ -18,15 +18,15 @@
     </div>
 
     <!--
-    data-font-url
+    data-font-url【中文字体】
         three.js用到的中文字体（微软雅黑粗体）json文件的URL
 
-    data-dxf-file-url
+    data-dxf-file-url【CAD图】
         获取dxf文件的URL
 
-    data-id-to-name-mapping-url
+    data-id-to-name-mapping-url【映射表】
         获取id到name的映射表。
-        后台返回的数据：（参考：JsonResult.java）
+        接收到的数据格式（JsonResult.java）
             {
                 "success": Boolean,
                 "data": {
@@ -36,9 +36,19 @@
                 }
             }
 
-    data-websocket-url
-        WebSocket 的 URL
-
+    data-websocket-url【数据源】
+        指定 WebSocket 的 URL。
+        服务器端不断推送（坐标）数据，客户端（浏览器）解析并在2D图上显示坐标位置。
+        接收到的数据格式：
+            {
+               // 人的ID
+               id: Number,
+               // 坐标类型：0 - 人离开了；1 - 人第一次出现；2 - 人移动了。
+               cmd: Number,
+               // 坐标
+               x: Number,
+               y: Number,
+            }
     -->
     <div class="pku-area-map"
          id="areaMap"
