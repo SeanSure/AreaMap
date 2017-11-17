@@ -194,27 +194,39 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
         window.requestAnimationFrame( AreaMapRender );
 
         var
-            raycaster = AreaMap.raycaster
+            AreaMap = window.AreaMap,
+            raycaster = AreaMap.raycaster,
+            intersects,
+            object
         ;
         raycaster.setFromCamera( AreaMap.mouse, AreaMap.camera );
         // console.info( AreaMap.mouse );
 
-        var intersects = raycaster.intersectObjects(  AreaMap.scene.children );
+        intersects = raycaster.intersectObjects(  AreaMap.scene.children );
+
         if ( intersects.length > 0 ) {
-            if ( AreaMap.intersected != intersects[ 0 ].object ) {
+
+            object = intersects[ 0 ].object;
+
+            // 如果不是 同一个
+            if ( AreaMap.intersected !== object ) {
+                // 还原上一个的颜色
                 if ( AreaMap.intersected ) {
                     AreaMap.intersected.material.color.setHex( AreaMap.intersected.currentHex );
                 }
-                AreaMap.intersected = intersects[ 0 ].object;
-                if ( AreaMap.intersected.material.map instanceof THREE.Texture ) {
-                    AreaMap.intersected.currentHex = AreaMap.intersected.material.color.getHex();
-                    AreaMap.intersected.material.color.setHex( 0xff746f );
+                // 如果是贴图对象的则变色
+                if ( object.material.map instanceof THREE.Texture ) {
+                    object.currentHex = object.material.color.getHex();
+                    object.material.color.setHex( 0xff746f );
                     // alert( AreaMap.intersected._pkuData.id );
+                    AreaMap.intersected = object;
                 }
             }
         } else {
-            if ( AreaMap.intersected ) AreaMap.intersected.material.color.setHex( AreaMap.intersected.currentHex );
-            AreaMap.intersected = null;
+            if ( AreaMap.intersected ) {
+                AreaMap.intersected.material.color.setHex( AreaMap.intersected.currentHex );
+                AreaMap.intersected = null;
+            }
         }
 
         AreaMap.threeDxfInstance.render();
