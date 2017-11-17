@@ -206,9 +206,18 @@ var ThreeDxf;
         camera.position.x = viewPort.center.x;
         camera.position.y = viewPort.center.y;
 
+        // FIX 暴露出去
+        this.camera = camera;
+
         var renderer = this.renderer = new THREE.WebGLRenderer();
+        // FIX
+        renderer.setPixelRatio( window.devicePixelRatio );
+
         renderer.setSize(width, height);
         renderer.setClearColor(0xfffffff, 1);
+
+        // FIX 暴露出去
+        this.renderer = renderer;
 
         $parent.append(renderer.domElement);
         $parent.show();
@@ -258,7 +267,7 @@ var ThreeDxf;
             camera.left = (hscale * camera.left);
             camera.right = (hscale * camera.right);
 
-    //        camera.updateProjectionMatrix();
+           camera.updateProjectionMatrix();
 
             renderer.setSize(width, height);
             renderer.setClearColor(0xfffffff, 1);

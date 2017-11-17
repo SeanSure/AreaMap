@@ -134,15 +134,6 @@ define( [ "./config" ], function ( Config ) {
             circleGeometry,
             circleMaterial,
             circleMesh,
-            /*
-             littleCircleGeometry,
-             littleCircleMaterial,
-             littleCircleMesh,
-             */
-            triangleShape,
-            triangleGeometry,
-            triangleMaterial,
-            triangleMesh,
 
             textGeometry,
             textMaterial,
@@ -152,39 +143,50 @@ define( [ "./config" ], function ( Config ) {
 
         colors = this._getColor();
 
-        circleGeometry = new THREE.CircleGeometry( Config.textSize , 32 );
-        circleMaterial = new THREE.MeshBasicMaterial( { color: colors[ 1 ]/*, transparent: true, opacity: 0.9 */} );
+        var texture = new THREE.TextureLoader().load( Config.imageDirUrl + "policeman_128x256.png" );
+        circleGeometry = new THREE.PlaneGeometry( 1000 , 2000 );
+        circleMaterial = new THREE.MeshBasicMaterial( { color: "#ffffff"/*, transparent: true, opacity: 0.9 */} );
+        circleMaterial.map = texture;
         circleMesh = new THREE.Mesh( circleGeometry, circleMaterial );
-        /*
-
-         littleCircleGeometry = new THREE.CircleGeometry( Config.textSize / 3 , 32 );
-         littleCircleMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff/!*, transparent: true, opacity: 0.9*!/  } );
-         littleCircleMesh = new THREE.Mesh( littleCircleGeometry, littleCircleMaterial );
-         */
 
 
-        triangleShape = new THREE.Shape();
-        triangleShape.moveTo( 0, 0 );
-        triangleShape.lineTo( 2 * Config.textSize, 0 );
-        triangleShape.lineTo( Config.textSize, -3 * Config.textSize);
-        triangleShape.lineTo( 0, 0);
-        triangleGeometry = new THREE.ShapeGeometry( triangleShape );
-        triangleMaterial = new THREE.MeshBasicMaterial( { color: colors[ 1 ], transparent: true, opacity: 0.9 } );
-        triangleMesh = new THREE.Mesh( triangleGeometry, triangleMaterial ) ;
+        // var texture = new THREE.TextureLoader().load( Config.imageDirUrl + "animals/cat.jpg" );
+        // var mat = new THREE.MeshPhongMaterial();
+        // mat.map = texture;
+        // triangleMesh = new THREE.Mesh(triangleShape, mat);
 
         textGeometry = new THREE.TextGeometry( text, { font: Config.font, height: 0, size: Config.textSize } );
         textMaterial = new THREE.MeshBasicMaterial( { color: colors[ 1 ], transparent: true, opacity: 0.8 } );
         textMesh = new THREE.Mesh( textGeometry, textMaterial );
 
         this.textMesh = textMesh;
-        this.triangleMesh = triangleMesh;
         this.circleMesh = circleMesh;
         // this.littleCircleMesh = littleCircleMesh;
 
-        scene.add( triangleMesh );
+
+        this.circleMesh._pkuData = this.opts;
+
         scene.add( textMesh );
         scene.add( circleMesh );
         // scene.add( littleCircleMesh );
+    };
+
+    /**
+     * @description 创建贴图对象
+     * @private
+     */
+    LocationTag.prototype.createImage = function () {
+        var
+            THREE = window.THREE
+        ;
+
+        function createMesh(geom, imageFile) {
+            var texture = THREE.ImageUtils.loadTexture( Config.imageDirUrl + "animals/" + imageFile);
+            var mat = new THREE.MeshPhongMaterial();
+            mat.map = texture;
+
+            return new THREE.Mesh(geom, mat);
+        }
     };
 
     /**
@@ -246,7 +248,6 @@ define( [ "./config" ], function ( Config ) {
      */
     LocationTag.prototype.moveLocator = function ( pos ) {
         var
-            trianglePosition,
             circlePosition,
             // littleCirclePosition,
             textPosition
@@ -262,24 +263,21 @@ define( [ "./config" ], function ( Config ) {
         textPosition.y = pos.textPositionY;
         textPosition.z = 0;
 
-        trianglePosition = this.triangleMesh.position;
-        trianglePosition.x = pos.trianglePositionX;
-        trianglePosition.y = pos.trianglePositionY;
-        trianglePosition.z = 0;
 
         circlePosition = this.circleMesh.position;
         circlePosition.x = pos.circlePositionX;
         circlePosition.y = pos.circlePositionY;
         circlePosition.z = 0;
-        /*
-
-         littleCirclePosition = this.littleCircleMesh.position;
-         littleCirclePosition.x = pos.circlePositionX;
-         littleCirclePosition.y = pos.circlePositionY;
-         littleCirclePosition.z = 0;
-         */
 
         LocationTag.prototype.AreaMap.update();
+    };
+
+    /**
+     * @description 移动贴图对象
+     * @private
+     */
+    LocationTag.prototype.moveImage = function () {
+
     };
 
     /**
@@ -376,8 +374,6 @@ define( [ "./config" ], function ( Config ) {
             textWidth = size.textWidth,
             textHeight = size.textHeight,
 
-            trianglePositionX,
-            trianglePositionY,
             circlePositionX,
             circlePositionY,
             textPositionX,
@@ -388,15 +384,11 @@ define( [ "./config" ], function ( Config ) {
         circlePositionX = pos.x * xRate;
         circlePositionY = pos.y * yRate + Config.textSize * 3.4;
 
-        trianglePositionX = circlePositionX - Config.textSize;
-        trianglePositionY = circlePositionY;
 
         textPositionX = pos.x * xRate - textWidth / 2 * 1.3;
         textPositionY = pos.y * yRate - textHeight / 2;
 
         return {
-            trianglePositionX: trianglePositionX,
-            trianglePositionY: trianglePositionY,
 
             circlePositionX: circlePositionX,
             circlePositionY: circlePositionY,

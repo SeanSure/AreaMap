@@ -4,7 +4,7 @@
  * @author 吴钦飞
  * @link https://github.com/forwardNow/AreaMap
  */
-define( [ "jquery", "./alert" ], function ( $, Alert ) {
+define( [ "jquery", "./alert", "threedxf" ], function ( $, Alert ) {
     "use strict";
     var
         Config
@@ -53,6 +53,9 @@ define( [ "jquery", "./alert" ], function ( $, Alert ) {
         // 实际的Y坐标 与 请求的Y坐标 比
         yRate: 10,
 
+        // 图片URL
+        imageDirUrl: "",
+
         // 颜色列表
         colorList: [
             [ 0xffffff, 0x7eb8f2 ],
@@ -90,12 +93,15 @@ define( [ "jquery", "./alert" ], function ( $, Alert ) {
         // this._getDxfData();
         // this._getFontData();
 
+        // this.getIdToNameMappingData(  );
+
         this._prepareData( callback );
 
-        this.getIdToNameMappingData();
 
         return this;
     };
+
+
     /**
      * 赋值
      * @private
@@ -109,6 +115,8 @@ define( [ "jquery", "./alert" ], function ( $, Alert ) {
         this.websocketUrl = this.$container.data( "websocket-url" );
         this.fontUrl = this.$container.data( "font-url" );
 
+        this.imageDirUrl = this.$container.data( "image-dir-url" );
+
         this.dxfParser = new DxfParser();
     };
 
@@ -119,59 +127,29 @@ define( [ "jquery", "./alert" ], function ( $, Alert ) {
      */
     Config._prepareData = function ( callback ) {
         var
-            _this = this,
-            $progress = this.$progress,
-            $progressBar = $( "#areaMapProgressBar" ),
-            $areaMapProgressNum = $( "#areaMapProgressNum" ),
-            $areaMapProgressTxt = $( "#areaMapProgressTxt" ),
-            timerId,
-            count = 0
+            _this = this
         ;
 
         console.info( "准备数据..." );
 
-        // 8秒走完进度条
-        timerId = window.setInterval( function () {
-            if ( count >= 100 ) {
-                if ( _this._isPrepared === false ) {
-                    count = 98;
-                } else {
-                    window.clearInterval( timerId );
-                    window.setTimeout( function () {
-                        $progress.fadeOut( 600 );
-                    }, 1500 );
-                    count = 99;
-                }
-            }
-            $progressBar.css( "width", ++count + "%" );
-            $areaMapProgressNum.text( count );
-        }, 8 * 1000 / 100 );
+        this.getIdToNameMappingData( function () {
+            console.info( "映射文件请求完毕！" );
+            _this._isIdToNameMappingReady = true;
+            refresh();
+        } );
 
         this._getDxfData( function () {
             console.info( "DXF文件请求完毕！" );
-            $areaMapProgressTxt.text( "DXF文件请求完毕" );
-            if ( count + 40 >= 100 ) {
-                count += 40;
-            } else {
-                count = 99;
-            }
             refresh();
         } );
         this._getFontData( function () {
             console.info( "字体文件请求完毕！" );
-            $areaMapProgressTxt.text( "字体文件请求完毕" );
-            if ( count + 40 >= 100 ) {
-                count += 40;
-            } else {
-                count = 99;
-            }
             refresh();
         } );
 
         function refresh() {
-            if ( _this._isDxfFileReady === true && _this._isChineseFontReady === true ) {
+            if ( _this._isDxfFileReady === true && _this._isChineseFontReady === true && _this._isIdToNameMappingReady === true ) {
                 console.info( "数据准备完毕！" );
-                $areaMapProgressTxt.text( "数据准备完毕" );
                 _this._isPrepared = true;
                 callback();
             }
@@ -238,7 +216,7 @@ define( [ "jquery", "./alert" ], function ( $, Alert ) {
     /**
      * 获取 id到名称的映射
      */
-    Config.getIdToNameMappingData = function () {
+    Config.getIdToNameMappingData = function ( callback ) {
         var
             _this = this
         ;
@@ -251,6 +229,7 @@ define( [ "jquery", "./alert" ], function ( $, Alert ) {
         } ).done( function ( responseData ) {
             if ( responseData && responseData.success === true ) {
                 _this.idToNameMapping = responseData.data;
+                callback && callback();
             }
             else {
                 throw "获取 ID到名称的映射表 失败！";

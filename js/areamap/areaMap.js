@@ -69,6 +69,8 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
      */
     AreaMap.init = function ( initedCallback ) {
 
+        window.AreaMap = AreaMap;
+
         // 与 LocationTag 产生关联
         LocationTag.prototype.AreaMap = AreaMap;
 
@@ -78,13 +80,51 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
 
         this._useWhichShape();
 
+
+
         Config.init( function() {
-            initedCallback && initedCallback();
             AreaMap.display();
+
+            var light = new window.THREE.DirectionalLight( 0xffffff );
+            light.position.set( 0, 1, 1 ).normalize();
+            AreaMap.scene.add(light);
+
+            AreaMap.interaction();
+
+            AreaMap.animate();
+
+            //console.info( Config.idToNameMapping );
+
+            initedCallback && initedCallback();
         } );
 
-
         return this;
+    };
+
+    AreaMap.interaction =  function () {
+        AreaMap.raycaster = new THREE.Raycaster();
+        AreaMap.mouse = new THREE.Vector2();
+        AreaMap.intersected = null;
+
+        var
+            $areaMap = $("#areaMap"),
+            offset = $areaMap.offset(),
+            offsetX = offset.left,
+            offsetY = offset.top,
+            width = $areaMap.width(),
+            height = $areaMap.height()
+        ;
+
+        $( document ).on( "mousemove", function ( event ) {
+            event.preventDefault();
+            AreaMap.mouse.x = ( (event.pageX - offsetX) / width  ) * 2 - 1;
+            AreaMap.mouse.y = -( (event.pageY - offsetY) / height  ) * 2 + 1;
+        } ).on( "click", function () {
+            if ( AreaMap.intersected && AreaMap.intersected.material.color.getHex() === 0xff746f ) {
+                // console.info( AreaMap.intersected._pkuData );
+                $( document ).trigger( "clickedPersion", AreaMap.intersected._pkuData );
+            }
+        } );
     };
 
     /**
@@ -111,6 +151,10 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
                 LocationTag.prototype.move = LocationTag.prototype.moveLocator;
                 break;
             }
+            case "image": {
+                LocationTag.prototype.create = LocationTag.prototype.createImage;
+                LocationTag.prototype.move = LocationTag.prototype.moveImage;
+            }
         }
     };
 
@@ -129,14 +173,54 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
         threeDxfInstance = new window.ThreeDxf.Viewer(data, $target.get( 0 ), width, height, font);
 
         this.threeDxfInstance = threeDxfInstance;
+
         this.scene = threeDxfInstance.threeScene;
+        this.camera = threeDxfInstance.camera;
+        this.renderer = threeDxfInstance.renderer;
     };
 
     /**
      * 刷新
      */
     AreaMap.update = function () {
-        this.threeDxfInstance.render();
+        // this.threeDxfInstance.render();
+    };
+
+    AreaMap.animate = function () {
+        window.AreaMapRender();
+    };
+
+    window.AreaMapRender = function () {
+        window.requestAnimationFrame( AreaMapRender );
+
+        var
+            raycaster = AreaMap.raycaster
+        ;
+        raycaster.setFromCamera( AreaMap.mouse, AreaMap.camera );
+        // console.info( AreaMap.mouse );
+
+        var intersects = raycaster.intersectObjects(  AreaMap.scene.children );
+        if ( intersects.length > 0 ) {
+            if ( AreaMap.intersected != intersects[ 0 ].object ) {
+                if ( AreaMap.intersected ) {
+                    AreaMap.intersected.material.color.setHex( AreaMap.intersected.currentHex );
+                }
+                AreaMap.intersected = intersects[ 0 ].object;
+                if ( AreaMap.intersected.material.map instanceof THREE.Texture ) {
+                    AreaMap.intersected.currentHex = AreaMap.intersected.material.color.getHex();
+                    AreaMap.intersected.material.color.setHex( 0xff746f );
+                    // alert( AreaMap.intersected._pkuData.id );
+                }
+            }
+        } else {
+            if ( AreaMap.intersected ) AreaMap.intersected.material.color.setHex( AreaMap.intersected.currentHex );
+            AreaMap.intersected = null;
+        }
+
+        AreaMap.threeDxfInstance.render();
+
+        //console.info( "render" );
+
     };
 
     /**
@@ -181,7 +265,7 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
 
         // 当 cmd = 0 || cmd = 1 时（有人离开或出现时），异步Ajax请求映射表
         if ( cmd === 0 || cmd === 1 ) {
-            Config.getIdToNameMappingData( true );
+            Config.getIdToNameMappingData( );
         }
 
         if ( locationTag ) {
