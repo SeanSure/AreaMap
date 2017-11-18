@@ -27,20 +27,6 @@ define( [ "./config" ], function ( Config ) {
     };
 
     /**
-     * 创建位置标签
-     *      创建位置标签的具体方式 在 AreaMap._useWhichShape() 中决定
-     */
-    LocationTag.prototype.create = function () {
-    };
-
-    /**
-     * 移动位置标签
-     *      移动的具体方式 在 AreaMap._useWhichShape() 中决定
-     */
-    LocationTag.prototype.move = function () {
-    };
-
-    /**
      * 格式化opts
      * @example
      *      {
@@ -70,66 +56,22 @@ define( [ "./config" ], function ( Config ) {
             x: originOpts.x,
             y: originOpts.y
         };
-        fmtOpts.text = Config.idToNameMapping[ originOpts.id ] || originOpts.id;
+        fmtOpts.text = Config.getNameById(originOpts.id );
         this.opts = fmtOpts;
         this.originOpts = originOpts;
-    };
-
-
-
-
-    /**
-     * 创建，矩形
-     * @private
-     */
-    LocationTag.prototype.createRectangle = function () {
-        var
-            THREE = window.THREE,
-            scene = LocationTag.prototype.AreaMap.scene,
-            text = this.opts.text,
-
-            size,
-            colors,
-
-            planeGeometry,
-            planeMaterial,
-            planeMesh,
-
-            textGeometry,
-            textMaterial,
-            textMesh
-
-        ;
-
-        size = this._calcSize( this.opts.text );
-        colors = this._getColor();
-
-        planeGeometry = new THREE.PlaneGeometry( size.planeWidth, size.planeHeight );
-        planeMaterial = new THREE.MeshBasicMaterial( { color: colors[ 1 ], transparent: true, opacity: 0.8 } );
-        planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
-
-        textGeometry = new THREE.TextGeometry( text, { font: Config.font, height: 0, size: Config.textSize } );
-        textMaterial = new THREE.MeshBasicMaterial( { color: colors[ 0 ], transparent: true, opacity: 0.8 } );
-        textMesh = new THREE.Mesh( textGeometry, textMaterial );
-
-        this.planeMesh = planeMesh;
-        this.textMesh = textMesh;
-
-        scene.add( planeMesh );
-        scene.add( textMesh );
     };
 
     /**
      * 创建，定位锚
      * @private
      */
-    LocationTag.prototype.createLocator = function () {
+    LocationTag.prototype.create = function () {
         var
             THREE = window.THREE,
             scene = LocationTag.prototype.AreaMap.scene,
             text = this.opts.text,
 
-            colors,
+            color,
 
             circleGeometry,
             circleMaterial,
@@ -141,7 +83,7 @@ define( [ "./config" ], function ( Config ) {
 
         ;
 
-        colors = this._getColor();
+        color = this._getColor();
 
         var texture = new THREE.TextureLoader().load( Config.imageDirUrl + "policeman_128x256.png" );
         circleGeometry = new THREE.PlaneGeometry( 1000 , 2000 );
@@ -149,49 +91,22 @@ define( [ "./config" ], function ( Config ) {
         circleMaterial.map = texture;
         circleMesh = new THREE.Mesh( circleGeometry, circleMaterial );
 
-
-        // var texture = new THREE.TextureLoader().load( Config.imageDirUrl + "animals/cat.jpg" );
-        // var mat = new THREE.MeshPhongMaterial();
-        // mat.map = texture;
-        // triangleMesh = new THREE.Mesh(triangleShape, mat);
-
-        textGeometry = new THREE.TextGeometry( text, { font: Config.font, height: 0, size: Config.textSize } );
-        textMaterial = new THREE.MeshBasicMaterial( { color: colors[ 1 ], transparent: true, opacity: 0.8 } );
+        textGeometry = new THREE.TextGeometry( text, { font: Config.getFont(), height: 0, size: Config.textSize } );
+        textMaterial = new THREE.MeshBasicMaterial( { color: color, transparent: true, opacity: 0.8 } );
         textMesh = new THREE.Mesh( textGeometry, textMaterial );
 
         this.textMesh = textMesh;
         this.circleMesh = circleMesh;
-        // this.littleCircleMesh = littleCircleMesh;
-
 
         this.circleMesh._pkuData = this.opts;
 
         scene.add( textMesh );
         scene.add( circleMesh );
-        // scene.add( littleCircleMesh );
-    };
-
-    /**
-     * @description 创建贴图对象
-     * @private
-     */
-    LocationTag.prototype.createImage = function () {
-        var
-            THREE = window.THREE
-        ;
-
-        function createMesh(geom, imageFile) {
-            var texture = THREE.ImageUtils.loadTexture( Config.imageDirUrl + "animals/" + imageFile);
-            var mat = new THREE.MeshPhongMaterial();
-            mat.map = texture;
-
-            return new THREE.Mesh(geom, mat);
-        }
     };
 
     /**
      * 获取颜色
-     * @return {[Number, Number]} [字体的颜色, 图像的颜色]
+     * @return {String} 颜色值，如 "#f1f1f1"
      * @private
      */
     LocationTag.prototype._getColor = function () {
@@ -214,39 +129,11 @@ define( [ "./config" ], function ( Config ) {
 
 
 
-
-    /**
-     * 移动
-     * @param pos {({x: Number, y: Number}|{textPositionX: Number, textPositionY: Number, planePositionX: Number, planePositionY: Number})?}
-     */
-    LocationTag.prototype.moveRectangle = function ( pos ) {
-        var
-            planePosition,
-            textPosition
-        ;
-        pos = pos || this.opts.position;
-
-        if ( ! pos.hasOwnProperty( "textPositionX" ) ) {
-            pos = this._calcRectanglePos( pos );
-        }
-
-        textPosition = this.textMesh.position;
-        textPosition.x = pos.textPositionX;
-        textPosition.y = pos.textPositionY;
-        textPosition.z = 0;
-
-        planePosition = this.planeMesh.position;
-        planePosition.x = pos.planePositionX;
-        planePosition.y = pos.planePositionY;
-        planePosition.z = 0;
-
-        LocationTag.prototype.AreaMap.update();
-    };
     /**
      * 移动
      * @param pos {({x: Number, y: Number}|{textPositionX: Number, textPositionY: Number, trianglePositionX: Number, trianglePositionY: Number, circlePositionX: Number, circlePositionY: Number})?}
      */
-    LocationTag.prototype.moveLocator = function ( pos ) {
+    LocationTag.prototype.move = function ( pos ) {
         var
             circlePosition,
             // littleCirclePosition,
@@ -272,13 +159,6 @@ define( [ "./config" ], function ( Config ) {
         LocationTag.prototype.AreaMap.update();
     };
 
-    /**
-     * @description 移动贴图对象
-     * @private
-     */
-    LocationTag.prototype.moveImage = function () {
-
-    };
 
     /**
      * 根据文本计算元素的尺寸
@@ -320,43 +200,6 @@ define( [ "./config" ], function ( Config ) {
         };
     };
 
-    /**
-     * 根据(x,y)坐标计算实际的坐标
-     * @param pos {({x: Number, y: Number})?}
-     * @return {{planePositionX: number, planePositionY: number, textPositionX: number, textPositionY: number}}
-     * @private
-     */
-    LocationTag.prototype._calcRectanglePos = function ( pos ) {
-        var
-            xRate = Config.xRate,
-            yRate = Config.yRate,
-
-            size = this._calcSize(),
-
-            textWidth = size.textWidth,
-            textHeight = size.textHeight,
-
-            planePositionX,
-            planePositionY,
-            textPositionX,
-            textPositionY
-        ;
-
-
-        planePositionX = pos.x * xRate;
-        planePositionY = pos.y * yRate;
-
-        textPositionX = pos.x * xRate - textWidth / 2 * 1.4;
-        textPositionY = pos.y * yRate - textHeight / 2;
-
-        return {
-            planePositionX: planePositionX,
-            planePositionY: planePositionY,
-
-            textPositionX: textPositionX,
-            textPositionY: textPositionY
-        };
-    };
 
     /**
      * 根据(x,y)坐标计算实际的坐标

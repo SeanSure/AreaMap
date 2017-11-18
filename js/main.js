@@ -20,22 +20,19 @@ require.config( {
  * @link https://github.com/forwardNow/AreaMap
  * @author 吴钦飞
  */
-define( [ "jquery", "./areamap/areaMap", "./areamap/alert" ], function ( $, AreaMap, Alert ) {
+define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
     "use strict";
 
     $( document ).ready( function () {
 
-        //判断当前浏览器是否支持WebSocket
-        if ( ! window[ "WebSocket" ] ) {
-            Alert.show( "请使用支持WebSocket的浏览器：IE10及以上，Firefox11及以上，Chrome16及以上。" );
-            return;
-        }
+        var
+            options
+        ;
 
-
-
+        options = $( "#areaMap" ).data( "options" );
 
         // 初始化
-        AreaMap.init( function () {
+        AreaMap.init( options, function () {
 
             // 设置位置标签
             AreaMap.setLocationTag( {
@@ -44,8 +41,6 @@ define( [ "jquery", "./areamap/areaMap", "./areamap/alert" ], function ( $, Area
                 x: 42067/10,
                 y: -455732/10
             } );
-
-
 
             var
                 step = 10,
@@ -84,7 +79,7 @@ define( [ "jquery", "./areamap/areaMap", "./areamap/alert" ], function ( $, Area
         // 点击人后 触发事件“clickedPersion”
         $( document ).on( "clickedPersion", function ( event, data ) {
             console.info( data );
-            alert( data.id + ", " + AreaMap.Config.idToNameMapping[ data.id ] || data.id );
+            alert( data.id );
         } )
     } );
 

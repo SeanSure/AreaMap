@@ -4,121 +4,88 @@
  * @author 吴钦飞
  * @link https://github.com/forwardNow/AreaMap
  */
-define( [ "jquery", "./alert", "threedxf" ], function ( $, Alert ) {
+define( [ "jquery", "threedxf" ], function ( $ ) {
     "use strict";
     var
-        Config
+        Config,
+        THREE = window.THREE
     ;
 
     Config = {
 
-        // three.js 需要的中文字体（微软雅黑粗体，27M）是否获取完毕
-        _isChineseFontReady: false,
-        // dxf文件（cad图，10M）是否获取完毕
-        _isDxfFileReady: false,
-        // 字体和CAD图是否准备就绪
-        _isPrepared: false,
+        targetSelector: null,
 
-        // 标志坐标的形状："rectangle", "locator"
-        anchorShape: "locator",
+        /** dxf文件 - URL */
+        dxfUrl: null,
+        /** dxf文件 - 解析dxf文件后生成的JS对象 */ //
+        _dxfObj: null,
 
-        $container: "#areaMap",
-        $progress: "#areaMapProgress",
-
-        // dxf文件的URL
-        dxfFileUrl: null,
-        // window.DxfParser 的实例
-        dxfParser: null,
-        // 通过URL获取的 dxf文件 的原始数据（String）
-        originDxfData: null,
-        // 通过 DxfParser 解析好的JS对象
-        fmtDxfData: null,
-
-        // 字体文件
+        /** 字体文件 - URL */
         fontUrl: null,
-        // 字体文件对象
-        font: null,
+        /** 字体文件 - 字体文件对象 */
+        _font: null,
 
         // id到name的映射
         idToNameMappingUrl: null,
-        idToNameMapping: null,
+        _idToNameMapping: null,
 
-        // web socket url
-        websocketUrl: "",
-
-        // 字体大小
+        /** 字体大小 */
         textSize: 400,
-        // 实际的X坐标 与 请求的X坐标 比
+        /** 实际的X坐标 与 请求的X坐标 比 */
         xRate: 10,
-        // 实际的Y坐标 与 请求的Y坐标 比
+        /** 实际的Y坐标 与 请求的Y坐标 比 */
         yRate: 10,
 
-        // 图片URL
+        /** 图片URL */
         imageDirUrl: "",
 
-        // 颜色列表
+        /** 颜色列表 */
         colorList: [
-            [ 0xffffff, 0x7eb8f2 ],
-            [ 0xffffff, 0x98689a ],
-            [ 0xffffff, 0x0099cb ],
-            [ 0xffffff, 0xff6764 ],
-            [ 0xffffff, 0xff9a66 ],
-            [ 0xffffff, 0xcd9967 ],
-            [ 0xffffff, 0x666666 ],
-            [ 0xffffff, 0x99ce66 ],
-            [ 0xffffff, 0xcc3431 ],
-            [ 0xffffff, 0x013565 ],
-            [ 0xffffff, 0x993331 ],
-            [ 0xffffff, 0x653567 ],
-            [ 0xffffff, 0x0067cc ],
-            [ 0xffffff, 0xcc032f ],
-            [ 0xffffff, 0x346633 ],
-            [ 0xffffff, 0x993331 ],
-            [ 0xffffff, 0x013300 ],
-            [ 0xffffff, 0x323499 ],
-            [ 0xffffff, 0x003499 ],
-            [ 0xffffff, 0x029b63 ],
-            [ 0xffffff, 0xfe9b00 ]
+            "#7eb8f2",
+            "#98689a",
+            "#0099cb",
+            "#ff6764",
+            "#ff9a66",
+            "#cd9967",
+            "#666666",
+            "#99ce66",
+            "#cc3431",
+            "#013565",
+            "#993331",
+            "#653567",
+            "#0067cc",
+            "#cc032f",
+            "#346633",
+            "#993331",
+            "#013300",
+            "#323499",
+            "#003499",
+            "#029b63",
+            "#fe9b00"
         ]
     };
 
+
+
+
+
+
     /**
-     * 初始化
+     * @description 初始化
+     * @param options {Object}
      * @param callback {Function}
+     * @public
      */
-    Config.init = function ( callback ) {
+    Config.init = function ( options, callback ) {
 
-        this._render();
-
-        // this._getDxfData();
-        // this._getFontData();
-
-        // this.getIdToNameMappingData(  );
+        $.extend( this, options );
 
         this._prepareData( callback );
-
 
         return this;
     };
 
 
-    /**
-     * 赋值
-     * @private
-     */
-    Config._render = function () {
-        this.$container = $( this.$container );
-        this.$progress = $( this.$progress );
-
-        this.dxfFileUrl = this.$container.data( "dxf-file-url" );
-        this.idToNameMappingUrl = this.$container.data( "id-to-name-mapping-url" );
-        this.websocketUrl = this.$container.data( "websocket-url" );
-        this.fontUrl = this.$container.data( "font-url" );
-
-        this.imageDirUrl = this.$container.data( "image-dir-url" );
-
-        this.dxfParser = new DxfParser();
-    };
 
     /**
      * 准备数据（字体文件和DXF文件）
@@ -132,103 +99,115 @@ define( [ "jquery", "./alert", "threedxf" ], function ( $, Alert ) {
 
         console.info( "准备数据..." );
 
-        this.getIdToNameMappingData( function () {
+        this.updateIdToNameMapping( function () {
             console.info( "映射文件请求完毕！" );
-            _this._isIdToNameMappingReady = true;
+            _this.updateIdToNameMapping._isOk = true;
             refresh();
         } );
 
-        this._getDxfData( function () {
+        this.getDxfObj( function () {
             console.info( "DXF文件请求完毕！" );
+            _this.getDxfObj._isOk = true;
             refresh();
         } );
-        this._getFontData( function () {
+        this.getFont( function () {
             console.info( "字体文件请求完毕！" );
+            _this.getFont._isOk = true;
             refresh();
         } );
 
         function refresh() {
-            if ( _this._isDxfFileReady === true && _this._isChineseFontReady === true && _this._isIdToNameMappingReady === true ) {
-                console.info( "数据准备完毕！" );
-                _this._isPrepared = true;
-                callback();
+            if ( _this.updateIdToNameMapping._isOk !== true ) {
+                return;
             }
+            if ( _this.getDxfObj._isOk !== true ) {
+                return;
+            }
+            if ( _this.getFont._isOk !== true ) {
+                return;
+            }
+            console.info( "数据准备完毕！" );
+            callback();
         }
 
     };
 
     /**
-     * 获取 dxf文件，并解析
+     * 获取 dxf文件，并解析生成JS对象
      * @private
      * @param callback {Function?}
+     * @return {undefined|Object}
      */
-    Config._getDxfData = function ( callback ) {
-        var _this = this;
-
-        if (  Config._getDxfData.isPending === true ) {
-            return;
+    Config.getDxfObj = function ( callback ) {
+        var
+            _this = this
+        ;
+        if ( this._dxfObj ) {
+            return this._dxfObj;
         }
-        Config._getDxfData.isPending = true;
         $.ajax( {
             async: true,
-            url: this.dxfFileUrl,
+            url: this.dxfUrl,
             method: "GET",
             dataType: "text"
-        } ).done( function ( responseData ) {
-            _this.originDxfData = responseData;
-            _this._parseDxf();
-            _this._isDxfFileReady = true;
-            callback && callback();
+        } ).done( function ( dxfText ) {
+            var
+                dxfParser = new DxfParser(),
+                _dxfObj
+            ;
+            _dxfObj = dxfParser.parseSync( dxfText );
+            _this._dxfObj = _dxfObj;
+            callback && callback( _dxfObj );
         } ).fail( function () {
             console.error( "获取 dxf文件 失败。" );
-            Alert.show( "获取 dxf文件 失败。" );
         } );
     };
     /**
-     * 获取字体
+     * @description 获取字体对象
      * @param callback {Function?}
-     * @private
+     * @return {undefined|THREE.Font}
+     * @public
      */
-    Config._getFontData = function ( callback ) {
-        var _this = this;
-        if (  Config._getFontData.isPending === true ) {
-            return;
+    Config.getFont = function ( callback ) {
+        var
+            _this = this
+        ;
+        if ( this._font ) {
+            return this._font;
         }
-        Config._getFontData.isPending = true;
+
         $.ajax( {
             async: true,
             url: this.fontUrl,
             method: "GET",
             dataType: "json"
-        } ).done( function ( responseData ) {
-            _this.font = ( new window.THREE.FontLoader() ).parse( responseData );
-            _this._isChineseFontReady = true;
+        } ).done( function ( data ) {
+            _this._font = ( new THREE.FontLoader() ).parse( data );
             callback && callback();
         } ).fail( function () {
             console.error( "获取 字体文件 失败。" );
-            Alert.show( "获取 字体文件 失败。" );
         } );
-    };
-    Config._parseDxf = function () {
-        this.fmtDxfData = this.dxfParser.parseSync( this.originDxfData );
     };
 
     /**
-     * 获取 id到名称的映射
+     * @description 异步更新 id到名称的映射
+     * @param callback {Function?}
+     * @param isSync {Boolean?} 是否同步
+     * @public
      */
-    Config.getIdToNameMappingData = function ( callback ) {
+    Config.updateIdToNameMapping = function ( callback, isSync ) {
         var
             _this = this
         ;
         $.ajax( {
-            async: true,
+            async: !isSync,
             url: this.idToNameMappingUrl,
             method: "GET",
             cache: false,
             dataType: "json"
         } ).done( function ( responseData ) {
             if ( responseData && responseData.success === true ) {
-                _this.idToNameMapping = responseData.data;
+                _this._idToNameMapping = responseData.data;
                 callback && callback();
             }
             else {
@@ -236,9 +215,34 @@ define( [ "jquery", "./alert", "threedxf" ], function ( $, Alert ) {
             }
         } ).fail( function () {
             console.error( "获取 ID到名称的映射表 失败！" );
-            Alert.show( "获取 ID到名称的映射表 失败！" );
         } );
     };
+
+
+    /**
+     * @description 根据id获取名称
+     * @param id {String}
+     * @return {String}
+     */
+    Config.getNameById = function ( id ) {
+        var
+            name = this._idToNameMapping[ id ]
+        ;
+        if ( name !== undefined ) {
+            return name;
+        }
+        console.info( "未获取到【"+id+"】对应的名称，尝试同步请求映射表.." );
+
+        this.updateIdToNameMapping( null, true );
+        
+        name = this._idToNameMapping[ id ];
+
+        if ( name === undefined ) {
+            name = id;
+        }
+        return name;
+    };
+
 
     return Config;
 } );

@@ -4,75 +4,29 @@
     <meta charset=utf-8>
     <title>监控</title>
 
-    <!--<link rel="stylesheet" href="css/style.css">-->
     <script data-main="./js/main" src="js/requirejs/2.1.22/require.js"></script>
 </head>
 <body>
-
-
-<!--
-   data-font-url【中文字体】
-       three.js用到的中文字体（微软雅黑粗体）json文件的URL
-
-   data-dxf-file-url【CAD图】
-       获取dxf文件的URL
-
-   data-id-to-name-mapping-url【映射表】
-       获取id到name的映射表。
-       接收到的数据格式（JsonResult.java）
-           {
-               "success": Boolean,
-               "data": {
-                   "56789": "张三",
-                   "56799": "李四",
-                   ...
-               }
-           }
-
-   data-websocket-url【数据源】
-       指定 WebSocket 的 URL。
-       服务器端不断推送（坐标）数据，客户端（浏览器）解析并在2D图上显示坐标位置。
-       接收到的数据格式：
-           {
-              // 人的ID
-              id: Number,
-              // 坐标类型：0 - 人离开了；1 - 人第一次出现；2 - 人移动了。
-              cmd: Number,
-              // 坐标
-              x: Number,
-              y: Number,
-           }
-   -->
 <style>
     body {
         margin: 0;
         padding: 0;
-
-    }
-    html, body {
-        height: 100%;
     }
     #areaMap {
-        /*width:400px;*/
-        width: 860px;
-        height: 1200px;
-        /*width: 100%;*/
-        /*height: 100%;*/
         margin: 5px auto 0 auto;
         box-shadow: 0 0 10px rgba(0,0,0,0.5)
     }
 </style>
 <div
      id="areaMap"
-
-     data-image-dir-url="./images/"
-     data-font-url="./fonts/MicrosoftYaHei_Regular.json"
-     data-dxf-file-url="./data/center2.dxf"
-     data-id-to-name-mapping-url="./data/idToNameMapping.json"
-     data-websocket-url="ws://192.168.1.241:8080/LocalSense/localsense">
-
-    <div id="areaMapView" style="width: 100%; height: 100%;"></div>
-
+     style="width: 860px;height: 1200px;"
+     data-options='{
+        "targetSelector": "#areaMap",
+        "dxfUrl": "./data/center2.dxf",
+        "fontUrl": "./fonts/MicrosoftYaHei_Regular.json",
+        "idToNameMappingUrl": "./data/idToNameMapping.json",
+        "imageDirUrl": "./images/"
+     }'  >
 
 </div>
 

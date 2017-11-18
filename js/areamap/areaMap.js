@@ -44,13 +44,14 @@
 define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, LocationTag, Config ) {
     "use strict";
     var
-        AreaMap
+        AreaMap,
+        THREE = window[ "THREE" ]
     ;
     /**
-     * 场景地图
+     * @description 场景地图
      */
     AreaMap = {
-        // 在目标元素中显示
+        // 目标元素
         $target: null,
         // 实例
         threeDxfInstance: null,
@@ -63,37 +64,42 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
     };
 
     /**
+     * 声明属性
+     * @private
+     */
+    AreaMap._declare = function () {
+        // 目标元素
+        this.$target = $( Config.targetSelector );
+    };
+
+    /**
      * 初始化
+     * @param options {Object?}
      * @param initedCallback {Function?}
      * @return {AreaMap}
      */
-    AreaMap.init = function ( initedCallback ) {
+    AreaMap.init = function ( options, initedCallback ) {
 
-        window.AreaMap = AreaMap;
 
         // 与 LocationTag 产生关联
         LocationTag.prototype.AreaMap = AreaMap;
 
-        this.Config = Config;
-
-        this._render();
-
-        this._useWhichShape();
 
 
 
-        Config.init( function() {
+        Config.init( options, function() {
+
+            AreaMap._declare();
+
             AreaMap.display();
 
             var light = new window.THREE.DirectionalLight( 0xffffff );
             light.position.set( 0, 1, 1 ).normalize();
             AreaMap.scene.add(light);
 
-            AreaMap.interaction();
+            AreaMap._interaction();
 
             AreaMap.animate();
-
-            //console.info( Config.idToNameMapping );
 
             initedCallback && initedCallback();
         } );
@@ -101,18 +107,18 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
         return this;
     };
 
-    AreaMap.interaction =  function () {
+    AreaMap._interaction =  function () {
         AreaMap.raycaster = new THREE.Raycaster();
         AreaMap.mouse = new THREE.Vector2();
         AreaMap.intersected = null;
 
         var
-            $areaMap = $("#areaMap"),
-            offset = $areaMap.offset(),
+            $target = this.$target,
+            offset = $target.offset(),
             offsetX = offset.left,
             offsetY = offset.top,
-            width = $areaMap.width(),
-            height = $areaMap.height()
+            width = $target.width(),
+            height = $target.height()
         ;
 
         $( document ).on( "mousemove", function ( event ) {
@@ -127,47 +133,17 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
         } );
     };
 
-    /**
-     * 赋值
-     * @private
-     */
-    AreaMap._render = function () {
-        this.$target = $( "#areaMapView" );
-    };
-
-    /**
-     * 决定使用哪个形状
-     */
-    AreaMap._useWhichShape = function () {
-        //
-        switch ( Config.anchorShape ) {
-            case "rectangle": {
-                LocationTag.prototype.create = LocationTag.prototype.createRectangle;
-                LocationTag.prototype.move = LocationTag.prototype.moveRectangle;
-                break;
-            }
-            case "locator": {
-                LocationTag.prototype.create = LocationTag.prototype.createLocator;
-                LocationTag.prototype.move = LocationTag.prototype.moveLocator;
-                break;
-            }
-            case "image": {
-                LocationTag.prototype.create = LocationTag.prototype.createImage;
-                LocationTag.prototype.move = LocationTag.prototype.moveImage;
-            }
-        }
-    };
 
     /**
      * 展示
      */
     AreaMap.display = function () {
         var
-            data = Config.fmtDxfData,
+            data = Config.getDxfObj(),
             $target = this.$target,
             width = $target.width(),
             height = $target.height(),
-            font = Config.font,
+            font = Config.getFont(),
             threeDxfInstance
         ;
         threeDxfInstance = new window.ThreeDxf.Viewer(data, $target.get( 0 ), width, height, font);
@@ -183,27 +159,35 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
      * 刷新
      */
     AreaMap.update = function () {
-        // this.threeDxfInstance.render();
+        this.threeDxfInstance.render();
     };
 
     AreaMap.animate = function () {
-        window.AreaMapRender();
+
+        window.requestAnimationFrame( AreaMap.animate );
+
+        AreaMap._interact();
+        AreaMap.update();
     };
 
-    window.AreaMapRender = function () {
-        window.requestAnimationFrame( AreaMapRender );
-
+    /**
+     * @description 交互
+     * @private
+     */
+    AreaMap._interact = function () {
         var
-            AreaMap = window.AreaMap,
-            raycaster = AreaMap.raycaster,
+            raycaster,
             intersects,
             object
         ;
+
+        raycaster = AreaMap.raycaster;
+
         raycaster.setFromCamera( AreaMap.mouse, AreaMap.camera );
-        // console.info( AreaMap.mouse );
 
         intersects = raycaster.intersectObjects(  AreaMap.scene.children );
 
+        // 交叉点有对象，则更改其状体
         if ( intersects.length > 0 ) {
 
             object = intersects[ 0 ].object;
@@ -212,35 +196,40 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
             if ( AreaMap.intersected !== object ) {
                 // 还原上一个的颜色
                 if ( AreaMap.intersected ) {
-                    AreaMap.intersected.material.color.setHex( AreaMap.intersected.currentHex );
+                    AreaMap.intersected.material.color.setHex( AreaMap.intersected.originColor );
                 }
                 // 如果是贴图对象的则变色
                 if ( object.material.map instanceof THREE.Texture ) {
-                    object.currentHex = object.material.color.getHex();
+
+                    object.originColor = object.material.color.getHex();
                     object.material.color.setHex( 0xff746f );
-                    // alert( AreaMap.intersected._pkuData.id );
+
                     AreaMap.intersected = object;
                 }
             }
-        } else {
+        }
+        // 交叉点没有对象，则将上个对象恢复原始状态
+        else {
             if ( AreaMap.intersected ) {
-                AreaMap.intersected.material.color.setHex( AreaMap.intersected.currentHex );
+                AreaMap.intersected.material.color.setHex( AreaMap.intersected.originColor );
                 AreaMap.intersected = null;
             }
         }
-
-        AreaMap.threeDxfInstance.render();
-
-        //console.info( "render" );
-
     };
 
+
     /**
-     * 移动
+     * @description 设置定位标签
      * @param data {{ id: String, x: Number, y: Number, cmd: Number}}
+     * @public
      */
     AreaMap.setLocationTag = function ( data ) {
-        var locationTag = this.getLocationTag( data );
+        var
+            locationTag
+        ;
+        // 获取（没有，则创建）
+        locationTag = this.getLocationTag( data );
+        // 移动
         locationTag.move( data );
     };
 
@@ -277,7 +266,7 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
 
         // 当 cmd = 0 || cmd = 1 时（有人离开或出现时），异步Ajax请求映射表
         if ( cmd === 0 || cmd === 1 ) {
-            Config.getIdToNameMappingData( );
+            Config.updateIdToNameMapping();
         }
 
         if ( locationTag ) {
@@ -285,7 +274,6 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
         }
 
         return this.createLocationTag( opts );
-
     };
 
     /**
@@ -301,6 +289,7 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
         AreaMap.locationTagSet[ opts.id ] = locationTag;
         return locationTag;
     };
+
 
     return AreaMap;
 } );
