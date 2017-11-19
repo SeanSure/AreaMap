@@ -38,39 +38,39 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
             AreaMap.setLocationTag( {
                 cmd: 1,
                 id: "56789",
-                x: 42067/10,
-                y: -455732/10
+                x: 330000/10,
+                y: -330000/10
             } );
 
             var
                 step = 10,
                 count = 0
             ;
-            /*window.setInterval( function () {
+            window.setInterval( function () {
                 AreaMap.setLocationTag( {
                     cmd: 1,
                     id: "56789",
-                    x: 42067/10 + step * count,
-                    y: -455732/10 + step * count
+                    x: 330000/10 + step * count,
+                    y: -330000/10 + step * count
                 } );
                 count++;
-            }, 60 );*/
+            }, 60 );
 
-            // 设置位置标签
-            AreaMap.setLocationTag( {
-                cmd: 1,
-                id: "id_1",
-                x: 45885.24267402282/10,
-                y: -458450.18993214157/10
-            } );
-
-            // 设置位置标签
-            AreaMap.setLocationTag( {
-                cmd: 1,
-                id: "id_2",
-                x: 39017.73793295676/10,
-                y: -458691.5069131042/10
-            } );
+            // // 设置位置标签
+            // AreaMap.setLocationTag( {
+            //     cmd: 1,
+            //     id: "id_1",
+            //     x: 45885.24267402282/10,
+            //     y: -458450.18993214157/10
+            // } );
+            //
+            // // 设置位置标签
+            // AreaMap.setLocationTag( {
+            //     cmd: 1,
+            //     id: "id_2",
+            //     x: 39017.73793295676/10,
+            //     y: -458691.5069131042/10
+            // } );
 
 
         } );

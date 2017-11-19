@@ -222,18 +222,22 @@ var ThreeDxf;
         $parent.append(renderer.domElement);
         $parent.show();
 
-        var controls = new THREE.OrbitControls(camera, parent);
-        controls.target.x = camera.position.x;
-        controls.target.y = camera.position.y;
-        controls.target.z = 0;
-        controls.zoomSpeed = 3;
+        // var controls = new THREE.OrbitControls(camera, parent);
+        // controls.target.x = camera.position.x;
+        // controls.target.y = camera.position.y;
+        // controls.target.z = 0;
+        // controls.zoomSpeed = 3;
+
+        // FIX 暴露出去
+        // this.controls = controls;
 
 
         this.render = function() {
             renderer.render(scene, camera);
         };
 
-        controls.addEventListener('change', this.render);
+        // controls.addEventListener('change', this.render);
+
         this.render();
 
         $parent.on('click', function(event) {

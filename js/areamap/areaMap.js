@@ -118,6 +118,9 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
      */
     AreaMap.init = function ( options, initedCallback ) {
 
+        var
+            _this = this
+        ;
 
         // 与 LocationTag 产生关联
         LocationTag.prototype.AreaMap = AreaMap;
@@ -132,6 +135,21 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
             AreaMap._bindEvent();
 
             AreaMap._animate();
+
+            // _this.camera.lookAt( new THREE.Vector3(330000,-330000,0) );
+            // _this.camera.lookAt( new THREE.Vector3(0,0,0) );
+
+            // AreaMap.camera.position.x = 306084.0229452408;
+            // AreaMap.camera.position.y = -332812.88479561365;
+
+            AreaMap.camera.position.x = 337084.0229452408;
+            AreaMap.camera.position.y = -336812.88479561365;
+
+            AreaMap.camera.left = -18932.797341393023;
+            AreaMap.camera.right = 18932.797341393023;
+            AreaMap.camera.top = 26417.856755432134;
+            AreaMap.camera.bottom = -26417.856755432134;
+            AreaMap.camera.updateProjectionMatrix( );
 
             initedCallback && initedCallback();
         } );
@@ -159,6 +177,8 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
         this.scene = threeDxfInstance.threeScene;
         this.camera = threeDxfInstance.camera;
         this.renderer = threeDxfInstance.renderer;
+        // this.controls = threeDxfInstance.controls;
+
 
 
         light = new THREE.DirectionalLight( 0xffffff );
@@ -346,6 +366,9 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
 
         this.locationCache.remove( opts.id );
     };
+
+
+    window.AreaMap = AreaMap;
 
 
     return AreaMap;
