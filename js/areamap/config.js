@@ -231,7 +231,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         if ( name !== undefined ) {
             return name;
         }
-        console.info( "未获取到【"+id+"】对应的名称，尝试同步请求映射表.." );
+        console.info( "未获取到【" + id + "】对应的名称，尝试同步请求映射表.." );
 
         this.updateIdToNameMapping( null, true );
         
@@ -243,6 +243,28 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         return name;
     };
 
+
+    /**
+     * @description 获取颜色
+     * @return {String}
+     */
+    Config.getColor = function () {
+        var
+            colorList = Config.colorList
+        ;
+
+        if ( colorList.index === undefined ) {
+            colorList.index = 0;
+        }
+
+        colorList.index++;
+
+        if ( colorList.index >= colorList.length ) {
+            colorList.index = 0;
+        }
+
+        return colorList[ colorList.index ];
+    };
 
     return Config;
 } );

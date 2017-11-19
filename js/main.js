@@ -46,7 +46,7 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
                 step = 10,
                 count = 0
             ;
-            window.setInterval( function () {
+            /*window.setInterval( function () {
                 AreaMap.setLocationTag( {
                     cmd: 1,
                     id: "56789",
@@ -54,7 +54,7 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
                     y: -455732/10 + step * count
                 } );
                 count++;
-            }, 60 );
+            }, 60 );*/
 
             // 设置位置标签
             AreaMap.setLocationTag( {

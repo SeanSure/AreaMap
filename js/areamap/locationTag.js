@@ -7,75 +7,59 @@ define( [ "./config" ], function ( Config ) {
 
     /**
      * 位置标记
+     * @param scene {THREE.Scene}
      * @param opts {{ id: String, x: Number, y: Number}}
      * @constructor
      */
-    function LocationTag ( opts ) {
-        this.opts = opts;
-        this._init();
+    function LocationTag ( scene, opts ) {
+        this.scene = scene;
+        this.options = opts;
+        this._declare();
     }
 
-    /**
-     * 初始化
-     *      创建并移动
-     * @private
-     */
-    LocationTag.prototype._init = function () {
-        this._fmtOpts( this.opts );
-        this.create();
-        this.move()
+    LocationTag.prototype._declare = function () {
+        /**
+         * @type {THREE.Mesh}
+         */
+        this.textMesh = null;
+        /**
+         * @type {THREE.Mesh}
+         */
+        this.planeMesh = null;
+
+        /**
+         * @description 显示的文本
+         * @type {String}
+         */
+        this.text = null;
+
+        /**
+         * @description x 坐标
+         * @type {number}
+         */
+        this.x = 0;
+
+        /**
+         * @description y 坐标
+         * @type {number}
+         */
+        this.y = 0;
+
     };
 
     /**
-     * 格式化opts
-     * @example
-     *      {
-     *          id: "id_1"
-     *          x: 22500,
-     *          y: 3000,
-     *          cmd: 1
-     *      }
-     *      格式化为
-     *      {
-     *          id: "id_1",
-     *          position: {
-     *              x: 22500,
-     *              y: 3000
-     *          },
-     *          text: "吴钦飞"
-     *      }
-     * @private
+     * @description 创建，定位锚
      */
-    LocationTag.prototype._fmtOpts = function () {
-        var
-            originOpts = this.opts,
-            fmtOpts = {}
-        ;
-        fmtOpts.id = originOpts.id;
-        fmtOpts.position = {
-            x: originOpts.x,
-            y: originOpts.y
-        };
-        fmtOpts.text = Config.getNameById(originOpts.id );
-        this.opts = fmtOpts;
-        this.originOpts = originOpts;
-    };
-
-    /**
-     * 创建，定位锚
-     * @private
-     */
-    LocationTag.prototype.create = function () {
+    LocationTag.prototype.create = function ( ) {
         var
             THREE = window.THREE,
-            scene = LocationTag.prototype.AreaMap.scene,
-            text = this.opts.text,
-
+            text,
             color,
+            scene,
 
-            circleGeometry,
-            circleMaterial,
-            circleMesh,
+            planeGeometry,
+            planeMaterial,
+            planeMesh,
 
             textGeometry,
             textMaterial,
@@ -83,186 +67,86 @@ define( [ "./config" ], function ( Config ) {
 
         ;
 
-        color = this._getColor();
+        scene = this.scene;
+
+        color = Config.getColor();
+        text = Config.getNameById( this.options.id );
+
 
         var texture = new THREE.TextureLoader().load( Config.imageDirUrl + "policeman_128x256.png" );
-        circleGeometry = new THREE.PlaneGeometry( 1000 , 2000 );
-        circleMaterial = new THREE.MeshBasicMaterial( { color: "#ffffff"/*, transparent: true, opacity: 0.9 */} );
-        circleMaterial.map = texture;
-        circleMesh = new THREE.Mesh( circleGeometry, circleMaterial );
+
+        planeGeometry = new THREE.PlaneGeometry( 1000 , 2000 );
+        planeMaterial = new THREE.MeshBasicMaterial( { color: "#ffffff"} );
+        planeMaterial.map = texture;
+        planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
 
         textGeometry = new THREE.TextGeometry( text, { font: Config.getFont(), height: 0, size: Config.textSize } );
-        textMaterial = new THREE.MeshBasicMaterial( { color: color, transparent: true, opacity: 0.8 } );
+        textMaterial = new THREE.MeshBasicMaterial( { color: color } );
         textMesh = new THREE.Mesh( textGeometry, textMaterial );
 
-        this.textMesh = textMesh;
-        this.circleMesh = circleMesh;
+        textGeometry.translate( -( text.length * 300 ), -( 1000 + Config.textSize + 100 ), 0 );
 
-        this.circleMesh._pkuData = this.opts;
+        this.text = text;
+        this.textMesh = textMesh;
+        this.planeMesh = planeMesh;
+
+        this.planeMesh._pkuData = this.options;
 
         scene.add( textMesh );
-        scene.add( circleMesh );
+        scene.add( planeMesh );
     };
 
+
     /**
-     * 获取颜色
-     * @return {String} 颜色值，如 "#f1f1f1"
-     * @private
+     * @description 更新
+     * @param opts {{ id: String, x: Number, y: Number}}
      */
-    LocationTag.prototype._getColor = function () {
+    LocationTag.prototype.update = function ( opts ) {
         var
-            colorList = Config.colorList
+            text = Config.getNameById( opts.id )
         ;
-
-        if ( typeof colorList.currentIndex !== "number" ) {
-            colorList.currentIndex = 0;
+        if ( this.x !== opts.x || this.y !== opts.y ) {
+            this.move( opts );
+        }
+        if ( this.text !== text ) {
+            this.setText();
         }
 
-        colorList.currentIndex++;
-
-        if ( colorList.currentIndex >= colorList.length ) {
-            colorList.currentIndex = 0;
-        }
-
-        return colorList[ colorList.currentIndex ];
     };
 
-
-
     /**
-     * 移动
-     * @param pos {({x: Number, y: Number}|{textPositionX: Number, textPositionY: Number, trianglePositionX: Number, trianglePositionY: Number, circlePositionX: Number, circlePositionY: Number})?}
+     * @description 移动
      */
     LocationTag.prototype.move = function ( pos ) {
         var
-            circlePosition,
-            // littleCirclePosition,
-            textPosition
+            x = pos.x,
+            y = pos.y
         ;
-        pos = pos || this.opts.position;
 
-        if ( ! pos.hasOwnProperty( "textPositionX" ) ) {
-            pos = this._calcLocatorPos( pos );
-        }
+        this.planeMesh.position.set( x * Config.xRate, y  * Config.yRate, 0 );
+        this.textMesh.position.set( x * Config.xRate, y * Config.yRate, 0 );
 
-        textPosition = this.textMesh.position;
-        textPosition.x = pos.textPositionX;
-        textPosition.y = pos.textPositionY;
-        textPosition.z = 0;
-
-
-        circlePosition = this.circleMesh.position;
-        circlePosition.x = pos.circlePositionX;
-        circlePosition.y = pos.circlePositionY;
-        circlePosition.z = 0;
-
-        LocationTag.prototype.AreaMap.update();
+        this.x = x;
+        this.y = y;
     };
 
-
     /**
-     * 根据文本计算元素的尺寸
-     * @param text {String?}
-     * @return {{planeWidth: number, planeHeight: number, textWidth: number, textHeight: number}}
-     * @private
+     * @description 设置文本
      */
-    LocationTag.prototype._calcSize = function ( text ) {
-        var
-            textLength,
-
-            textWidth,
-            textHeight,
-            planeWidth,
-            planeHeight
-        ;
-
-        text = text || this.opts.text;
-
-        if ( $.isNumeric( text ) ) {
-            textLength = ( text + "" ).length / 1.6;
-        } else {
-            textLength = text.length;
-        }
-
-        textWidth = textLength * Config.textSize;
-        textHeight = Config.textSize;
-
-        planeWidth = textWidth * 1.6;
-        planeHeight = textHeight * 1.6;
-
-
-        return {
-            planeWidth: planeWidth,
-            planeHeight: planeHeight,
-
-            textWidth: textWidth,
-            textHeight: textHeight
-        };
+    LocationTag.prototype.setText = function ( text ) {
+        this.textMesh.material.text = text;
+        this.text = text;
     };
 
 
     /**
-     * 根据(x,y)坐标计算实际的坐标
-     * @param pos {({x: Number, y: Number})?}
-     * @return {{textPositionX: Number, textPositionY: Number, trianglePositionX: Number, trianglePositionY: Number, circlePositionX: Number, circlePositionY: Number}}
-     * @private
-     */
-    LocationTag.prototype._calcLocatorPos = function ( pos ) {
-        var
-            xRate = Config.xRate,
-            yRate = Config.yRate,
-
-            size = this._calcSize(),
-
-            textWidth = size.textWidth,
-            textHeight = size.textHeight,
-
-            circlePositionX,
-            circlePositionY,
-            textPositionX,
-            textPositionY
-        ;
-
-
-        circlePositionX = pos.x * xRate;
-        circlePositionY = pos.y * yRate + Config.textSize * 3.4;
-
-
-        textPositionX = pos.x * xRate - textWidth / 2 * 1.3;
-        textPositionY = pos.y * yRate - textHeight / 2;
-
-        return {
-
-            circlePositionX: circlePositionX,
-            circlePositionY: circlePositionY,
-
-            textPositionX: textPositionX,
-            textPositionY: textPositionY
-        };
-    };
-
-    /**
-     * 销毁
+     * @description 销毁
      */
     LocationTag.prototype.destroy = function () {
-        var
-            meshNameList = [ "textMesh", "planeMesh", "circleMesh", "triangleMesh" ],
-            mesh, meshName, i, len
-        ;
-        // 从缓存中删除
-        LocationTag.prototype.AreaMap.locationTagSet[ this.opts.id ] = undefined;
-
-        // 在场景中删除对应的物体
-        for ( i = 0, len = meshNameList.length; i < len; i++ ) {
-            meshName = meshNameList[ i ];
-            mesh = this[ meshName ];
-            if ( ! mesh ) {
-                continue;
-            }
-            LocationTag.prototype.AreaMap.scene.remove( mesh );
-            this[ meshName ] = null;
-        }
-
+        this.scene.remove( this.planeMesh );
+        this.scene.remove( this.textMesh );
+        this.planeMesh = null;
+        this.textMesh = null;
     };
 
     return LocationTag;
