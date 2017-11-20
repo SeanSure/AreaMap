@@ -34,13 +34,6 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
         // 初始化
         AreaMap.init( options, function () {
 
-            // 设置位置标签
-            AreaMap.setLocationTag( {
-                cmd: 1,
-                id: "56780",
-                x: 330000/10,
-                y: -330000/10
-            } );
             //
             // var
             //     step = 10,
@@ -56,28 +49,15 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
             //     count++;
             // }, 60 );
 
-            // 设置位置标签
-            AreaMap.setLocationTag( {
-                cmd: 1,
-                id: "56782",
-                x: 337749.473228921/10,
-                y: -332075.02148763154/10
-            } );
 
             // 设置位置标签
-            AreaMap.setLocationTag( {
-                cmd: 1,
-                id: "56786",
-                x: 341778.1105424956/10,
-                y: -336339.09238477936/10
-            } );
-            // 设置位置标签
-            AreaMap.setLocationTag( {
-                cmd: 1,
-                id: "xx",
-                x: 343216.909583058/10,
-                y: -332591.87856607366/10
-            } );
+            AreaMap.setLocationTag( { cmd: 1, id: "56780", x: 336274/10, y: -331342/10 } );
+            AreaMap.setLocationTag( { cmd: 1, id: "56782", x: 340274/10, y: -331342/10 } );
+            AreaMap.setLocationTag( { cmd: 1, id: "56786", x: 344274/10, y: -331342/10 } );
+
+            AreaMap.setLocationTag( { cmd: 1, id: "56781", x: 336274/10, y: -335342/10 } );
+            AreaMap.setLocationTag( { cmd: 1, id: "56783", x: 340274/10, y: -335342/10 } );
+            AreaMap.setLocationTag( { cmd: 1, id: "56787", x: 344274/10, y: -335342/10 } );
 
 
         } );
