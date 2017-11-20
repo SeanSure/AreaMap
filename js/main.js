@@ -37,40 +37,40 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
             // 设置位置标签
             AreaMap.setLocationTag( {
                 cmd: 1,
-                id: "56789",
+                id: "56780",
                 x: 330000/10,
                 y: -330000/10
             } );
-
-            var
-                step = 10,
-                count = 0
-            ;
-            window.setInterval( function () {
-                AreaMap.setLocationTag( {
-                    cmd: 1,
-                    id: "56789",
-                    x: 330000/10 + step * count,
-                    y: -330000/10 + step * count
-                } );
-                count++;
-            }, 60 );
-
-            // // 设置位置标签
-            // AreaMap.setLocationTag( {
-            //     cmd: 1,
-            //     id: "id_1",
-            //     x: 45885.24267402282/10,
-            //     y: -458450.18993214157/10
-            // } );
             //
-            // // 设置位置标签
-            // AreaMap.setLocationTag( {
-            //     cmd: 1,
-            //     id: "id_2",
-            //     x: 39017.73793295676/10,
-            //     y: -458691.5069131042/10
-            // } );
+            // var
+            //     step = 10,
+            //     count = 0
+            // ;
+            // window.setInterval( function () {
+            //     AreaMap.setLocationTag( {
+            //         cmd: 1,
+            //         id: "56789",
+            //         x: 330000/10 + step * count,
+            //         y: -330000/10 + step * count
+            //     } );
+            //     count++;
+            // }, 60 );
+
+            // 设置位置标签
+            AreaMap.setLocationTag( {
+                cmd: 1,
+                id: "56782",
+                x: 337749.473228921/10,
+                y: -332075.02148763154/10
+            } );
+
+            // 设置位置标签
+            AreaMap.setLocationTag( {
+                cmd: 1,
+                id: "56786",
+                x: 341778.1105424956/10,
+                y: -336339.09238477936/10
+            } );
 
 
         } );

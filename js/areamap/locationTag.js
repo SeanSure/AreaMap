@@ -17,6 +17,10 @@ define( [ "./config" ], function ( Config ) {
         this._declare();
     }
 
+    /**
+     * @description 声明
+     * @private
+     */
     LocationTag.prototype._declare = function () {
         /**
          * @type {THREE.Mesh}
@@ -61,6 +65,8 @@ define( [ "./config" ], function ( Config ) {
             planeMaterial,
             planeMesh,
 
+            texture,
+
             textGeometry,
             textMaterial,
             textMesh
@@ -72,11 +78,10 @@ define( [ "./config" ], function ( Config ) {
         color = Config.getColor();
         text = Config.getNameById( this.options.id );
 
+        texture = Config.getPersonTextureById( this.options.id );
 
-        var texture = new THREE.TextureLoader().load( Config.imageDirUrl + "policeman_128x256.png" );
-
-        planeGeometry = new THREE.PlaneGeometry( 1000 , 2000 );
-        planeMaterial = new THREE.MeshBasicMaterial( { color: "#ffffff"} );
+        planeGeometry = new THREE.PlaneGeometry( Config.personMeshWidth , Config.personMeshHeight );
+        planeMaterial = new THREE.MeshBasicMaterial( { color: Config.personMeshColor } );
         planeMaterial.map = texture;
         planeMesh = new THREE.Mesh( planeGeometry, planeMaterial );
 
@@ -84,12 +89,11 @@ define( [ "./config" ], function ( Config ) {
         textMaterial = new THREE.MeshBasicMaterial( { color: color } );
         textMesh = new THREE.Mesh( textGeometry, textMaterial );
 
-        textGeometry.translate( -( text.length * 300 ), -( 1000 + Config.textSize + 100 ), 0 );
-
         this.text = text;
         this.textMesh = textMesh;
         this.planeMesh = planeMesh;
 
+        // 将数据挂载到矩形上
         this.planeMesh._pkuData = this.options;
 
         scene.add( textMesh );
@@ -123,11 +127,14 @@ define( [ "./config" ], function ( Config ) {
             y = pos.y
         ;
 
-        this.planeMesh.position.set( x * Config.xRate, y  * Config.yRate, 0 );
-        this.textMesh.position.set( x * Config.xRate, y * Config.yRate, 0 );
-
         this.x = x;
         this.y = y;
+
+        this.planeMesh.position.set( x * Config.xRate, y  * Config.yRate, 0 );
+
+        // 移动文本
+        this._setTextPosition();
+
     };
 
     /**
@@ -136,6 +143,7 @@ define( [ "./config" ], function ( Config ) {
     LocationTag.prototype.setText = function ( text ) {
         this.textMesh.material.text = text;
         this.text = text;
+        this._setTextPosition();
     };
 
 
@@ -147,6 +155,33 @@ define( [ "./config" ], function ( Config ) {
         this.scene.remove( this.textMesh );
         this.planeMesh = null;
         this.textMesh = null;
+    };
+
+    /**
+     * @description 更新文本位置文本
+     * @private
+     */
+    LocationTag.prototype._setTextPosition = function () {
+        var
+            text,
+            charLength,
+            littleCharLength,
+            offsetX,
+            offsetY
+        ;
+
+        text = this.text;
+
+        charLength = text.length;
+
+        littleCharLength = text.replace(/[^0-9a-z\-_]/g, "").length;
+
+        offsetX = -( ( charLength - littleCharLength ) * 300  + littleCharLength * 170 );
+
+        offsetY = -( Config.personMeshWidth + Config.textSize + 100 );
+
+        this.textMesh.position.set( this.x * Config.xRate + offsetX, this.y * Config.yRate + offsetY, 0);
+
     };
 
     return LocationTag;

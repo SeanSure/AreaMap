@@ -25,9 +25,40 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         /** 字体文件 - 字体文件对象 */
         _font: null,
 
-        // id到name的映射
-        idToNameMappingUrl: null,
-        _idToNameMapping: null,
+
+        /** 人员信息列表 - URL */
+        personInfoListUrl: null,
+        /** 人员信息列表 - 集合 */
+        _personInfoListDic: {
+            // "56789": { "id": "56789", "name": "吴钦飞", "type": "ordinary_man" },
+        },
+
+        /** 人 - 网格对象 - 宽度 */
+        personMeshWidth: 1000,
+        /** 人 - 网格对象 - 高度 */
+        personMeshHeight: 2000,
+        /** 人 - 网格对象 - 高度 */
+        personMeshColor: "#ffffff",
+
+        /** 人 - 图片 - 目录 */
+        personPictureDirectory: "",
+        /** 人 - 图片集合（256px * 512px） */
+        personPictureSet: {
+            // 警察 - 男
+            "police_man": "police_man.png",
+            // 警察 - 女
+            "police_woman": "police_woman.png",
+            // 嫌疑人 - 男
+            "suspect_man": "suspect_man.png",
+            // 嫌疑人 - 女
+            "suspect_woman": "suspect_woman.png",
+            // 一般人 - 男
+            "ordinary_man": "ordinary_man.png",
+            // 一般人 - 女
+            "ordinary_woman": "ordinary_woman.png"
+        },
+        /** 人 - 质地集合 */
+        _personTextureSet: {},
 
         /** 字体大小 */
         textSize: 400,
@@ -36,11 +67,8 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         /** 实际的Y坐标 与 请求的Y坐标 比 */
         yRate: 10,
 
-        /** 图片URL */
-        imageDirUrl: "",
-
         /** 颜色列表 */
-        colorList: [
+        _colorList: [
             "#7eb8f2",
             "#98689a",
             "#0099cb",
@@ -65,11 +93,6 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         ]
     };
 
-
-
-
-
-
     /**
      * @description 初始化
      * @param options {Object}
@@ -82,10 +105,36 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
 
         this._prepareData( callback );
 
+        this._initTextureSet();
+
         return this;
     };
 
 
+    /**
+     * @description 初始化人质地集合
+     * @private
+     */
+    Config._initTextureSet = function () {
+        var
+            humanType,
+            pictureName,
+            pictureUrl,
+            personPictureSet = this.personPictureSet,
+            humanTextureSet = this._personTextureSet,
+            personPictureDirectory = this.personPictureDirectory
+        ;
+
+        for ( humanType in personPictureSet ) {
+            if ( ! personPictureSet.hasOwnProperty( humanType ) ) {
+                continue;
+            }
+            pictureName = personPictureSet[ humanType ];
+            pictureUrl = personPictureDirectory + pictureName;
+            humanTextureSet[ humanType ] = new THREE.TextureLoader().load( pictureUrl );
+        }
+
+    };
 
     /**
      * 准备数据（字体文件和DXF文件）
@@ -99,9 +148,9 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
 
         console.info( "准备数据..." );
 
-        this.updateIdToNameMapping( function () {
-            console.info( "映射文件请求完毕！" );
-            _this.updateIdToNameMapping._isOk = true;
+        this.getIdPersonInfoList( function () {
+            console.info( "人员信息列表请求完毕！" );
+            _this.getIdPersonInfoList._isOk = true;
             refresh();
         } );
 
@@ -117,7 +166,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         } );
 
         function refresh() {
-            if ( _this.updateIdToNameMapping._isOk !== true ) {
+            if ( _this.getIdPersonInfoList._isOk !== true ) {
                 return;
             }
             if ( _this.getDxfObj._isOk !== true ) {
@@ -190,52 +239,54 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
     };
 
     /**
-     * @description 异步更新 id到名称的映射
+     * @description 获取人员信息列表
      * @param callback {Function?}
      * @param isSync {Boolean?} 是否同步
      * @public
      */
-    Config.updateIdToNameMapping = function ( callback, isSync ) {
+    Config.getIdPersonInfoList = function ( callback, isSync ) {
         var
             _this = this
         ;
         $.ajax( {
             async: !isSync,
-            url: this.idToNameMappingUrl,
+            url: this.personInfoListUrl,
             method: "GET",
             cache: false,
             dataType: "json"
         } ).done( function ( responseData ) {
             if ( responseData && responseData.success === true ) {
-                _this._idToNameMapping = responseData.data;
+                _this._personInfoListDic = responseData.data;
                 callback && callback();
             }
             else {
-                throw "获取 ID到名称的映射表 失败！";
+                throw "获取人员信息列表 失败！";
             }
         } ).fail( function () {
-            console.error( "获取 ID到名称的映射表 失败！" );
+            console.error( "获取人员信息列表 失败！" );
         } );
     };
 
 
     /**
-     * @description 根据id获取名称
+     * @description 根据id获取人员名称
      * @param id {String}
      * @return {String}
+     * @public
      */
     Config.getNameById = function ( id ) {
         var
-            name = this._idToNameMapping[ id ]
+            personInfo = this.getPersonInfoById( id ),
+            name = personInfo.name
         ;
         if ( name !== undefined ) {
             return name;
         }
-        console.info( "未获取到【" + id + "】对应的名称，尝试同步请求映射表.." );
+        console.info( "未获取到【" + id + "】对应的名称，同步请求人员信息列表.." );
 
-        this.updateIdToNameMapping( null, true );
+        this.getIdPersonInfoList( null, true );
         
-        name = this._idToNameMapping[ id ];
+        name = this.getPersonInfoById( id );
 
         if ( name === undefined ) {
             name = id;
@@ -243,6 +294,32 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         return name;
     };
 
+    /**
+     * @description 根据id获取人的材质
+     * @param id {String}
+     * @return {THREE.Texture}
+     * @public
+     */
+    Config.getPersonTextureById = function ( id ) {
+        var
+            personInfo = this.getPersonInfoById( id ),
+            type = personInfo.type
+        ;
+        if ( this._personTextureSet.hasOwnProperty( type ) ) {
+            return this._personTextureSet[ type ];
+        }
+        return this._personTextureSet[ "ordinary_man" ];
+    };
+
+    /**
+     * @description 根据id获取人员信息
+     * @param id {String}
+     * @return { {id:String, name: String, type: String} }
+     * @public
+     */
+    Config.getPersonInfoById = function ( id ) {
+        return this._personInfoListDic[ id ] || {};
+    };
 
     /**
      * @description 获取颜色
@@ -250,20 +327,20 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
      */
     Config.getColor = function () {
         var
-            colorList = Config.colorList
+            _colorList = Config._colorList
         ;
 
-        if ( colorList.index === undefined ) {
-            colorList.index = 0;
+        if ( _colorList.index === undefined ) {
+            _colorList.index = 0;
         }
 
-        colorList.index++;
+        _colorList.index++;
 
-        if ( colorList.index >= colorList.length ) {
-            colorList.index = 0;
+        if ( _colorList.index >= _colorList.length ) {
+            _colorList.index = 0;
         }
 
-        return colorList[ colorList.index ];
+        return _colorList[ _colorList.index ];
     };
 
     return Config;
