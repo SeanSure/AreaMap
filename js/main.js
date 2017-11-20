@@ -71,6 +71,13 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
                 x: 341778.1105424956/10,
                 y: -336339.09238477936/10
             } );
+            // 设置位置标签
+            AreaMap.setLocationTag( {
+                cmd: 1,
+                id: "xx",
+                x: 343216.909583058/10,
+                y: -332591.87856607366/10
+            } );
 
 
         } );

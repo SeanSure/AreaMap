@@ -148,9 +148,9 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
 
         console.info( "准备数据..." );
 
-        this.getIdPersonInfoList( function () {
+        this.getPersonInfoList( function () {
             console.info( "人员信息列表请求完毕！" );
-            _this.getIdPersonInfoList._isOk = true;
+            _this.getPersonInfoList._isOk = true;
             refresh();
         } );
 
@@ -166,7 +166,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         } );
 
         function refresh() {
-            if ( _this.getIdPersonInfoList._isOk !== true ) {
+            if ( _this.getPersonInfoList._isOk !== true ) {
                 return;
             }
             if ( _this.getDxfObj._isOk !== true ) {
@@ -183,9 +183,9 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
 
     /**
      * 获取 dxf文件，并解析生成JS对象
-     * @private
      * @param callback {Function?}
      * @return {undefined|Object}
+     * @public
      */
     Config.getDxfObj = function ( callback ) {
         var
@@ -244,7 +244,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
      * @param isSync {Boolean?} 是否同步
      * @public
      */
-    Config.getIdPersonInfoList = function ( callback, isSync ) {
+    Config.getPersonInfoList = function ( callback, isSync ) {
         var
             _this = this
         ;
@@ -276,17 +276,16 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
      */
     Config.getNameById = function ( id ) {
         var
-            personInfo = this.getPersonInfoById( id ),
-            name = personInfo.name
+            name = this.getPersonInfoById( id ).name
         ;
         if ( name !== undefined ) {
             return name;
         }
         console.info( "未获取到【" + id + "】对应的名称，同步请求人员信息列表.." );
 
-        this.getIdPersonInfoList( null, true );
+        this.getPersonInfoList( null, true );
         
-        name = this.getPersonInfoById( id );
+        name = this.getPersonInfoById( id ).name;
 
         if ( name === undefined ) {
             name = id;
