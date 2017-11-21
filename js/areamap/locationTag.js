@@ -134,7 +134,6 @@ define( [ "./config" ], function ( Config ) {
 
         // 移动文本
         this._setTextPosition();
-
     };
 
     /**

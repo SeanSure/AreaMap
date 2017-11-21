@@ -151,10 +151,12 @@ var ThreeDxf;
      * @param {Object} parent - the parent element to which we attach the rendering canvas
      * @param {Number} width - width of the rendering canvas in pixels
      * @param {Number} height - height of the rendering canvas in pixels
-     * @param {Object} font - a font loaded with THREE.FontLoader 
+     * @param {Object} font - a font loaded with THREE.FontLoader
+     * //FIX 扩展参数，可以手动指定视口的大小
+     * @param {Object} font - a font loaded with THREE.FontLoader
      * @constructor
      */
-    ThreeDxf.Viewer = function(data, parent, width, height, font) {
+    ThreeDxf.Viewer = function(data, parent, width, height, font, viewPort) {
         var $parent = $(parent);
 
         createLineTypeShaders(data);
@@ -199,7 +201,7 @@ var ThreeDxf;
         height = height || $parent.innerHeight();
         var aspectRatio = width / height;
         
-        var viewPort = Helpers.getCameraParametersFromScene(aspectRatio, scene);
+        viewPort = viewPort || Helpers.getCameraParametersFromScene(aspectRatio, scene);
         
         var camera = new THREE.OrthographicCamera(viewPort.left, viewPort.right, viewPort.top, viewPort.bottom, 1, 19);
         camera.position.z = 10;
@@ -222,11 +224,11 @@ var ThreeDxf;
         $parent.append(renderer.domElement);
         $parent.show();
 
-        // var controls = new THREE.OrbitControls(camera, parent);
-        // controls.target.x = camera.position.x;
-        // controls.target.y = camera.position.y;
-        // controls.target.z = 0;
-        // controls.zoomSpeed = 3;
+        var controls = new THREE.OrbitControls(camera, parent);
+        controls.target.x = camera.position.x;
+        controls.target.y = camera.position.y;
+        controls.target.z = 0;
+        controls.zoomSpeed = 1;
 
         // FIX 暴露出去
         // this.controls = controls;
@@ -236,7 +238,7 @@ var ThreeDxf;
             renderer.render(scene, camera);
         };
 
-        // controls.addEventListener('change', this.render);
+        controls.addEventListener('change', this.render);
 
         this.render();
 
@@ -256,6 +258,7 @@ var ThreeDxf;
             var pos = camera.position.clone().add(dir.multiplyScalar(distance));
 
             console.log(pos.x, pos.y); // Position in cad that is clicked
+            $parent.trigger( "clickedCanvas", { x: pos.x, y: pos.y } );
         });
 
         this.resize = function(width, height) {
