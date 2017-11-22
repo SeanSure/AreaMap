@@ -2,7 +2,7 @@
  * @fileoverview 配置
  *
  * @author 吴钦飞
- * @link https://github.com/forwardNow/AreaMap
+ * @link https://github.com/forwardNow/AreaMap/tree/Qingshan
  */
 define( [ "jquery", "threedxf" ], function ( $ ) {
     "use strict";

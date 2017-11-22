@@ -1,7 +1,7 @@
 /**
  * @fileoverview 位置标签
  * @author 吴钦飞
- * @link https://github.com/forwardNow/AreaMap
+ * @link https://github.com/forwardNow/AreaMap/tree/Qingshan
  */
 define( [ "./config" ], function ( Config ) {
 

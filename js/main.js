@@ -15,9 +15,8 @@ require.config( {
 } );
 
 /**
- * @fileoverview
- *      入口文件
- * @link https://github.com/forwardNow/AreaMap
+ * @fileoverview 入口文件
+ * @link https://github.com/forwardNow/AreaMap/tree/Qingshan
  * @author 吴钦飞
  */
 define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {

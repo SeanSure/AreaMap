@@ -1,7 +1,7 @@
 /**
  * @fileoverview 区域地图，用于显示位置坐标
  *
- * @link https://github.com/forwardNow/AreaMap
+ * @link https://github.com/forwardNow/AreaMap/tree/Qingshan
  * @author 吴钦飞
  */
 define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, LocationTag, Config ) {
