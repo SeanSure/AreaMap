@@ -13,6 +13,10 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
 
     Config = {
 
+        /** 调试模式，控制台输出一些调试信息 */
+        debug: true,
+
+        /** 目标元素CSS选择器 */
         targetSelector: null,
 
         /** dxf文件 - URL */
@@ -112,7 +116,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
 
 
     /**
-     * @description 初始化人质地集合
+     * @description 初始化人员质地集合
      * @private
      */
     Config._initTextureSet = function () {
@@ -137,7 +141,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
     };
 
     /**
-     * 准备数据（字体文件和DXF文件）
+     * @description 准备数据（字体文件和DXF文件）
      * @param callback {Function?}
      * @private
      */
@@ -146,21 +150,21 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
             _this = this
         ;
 
-        console.info( "准备数据..." );
+        Config.log( "准备数据..." );
 
         this.getPersonInfoList( function () {
-            console.info( "人员信息列表请求完毕！" );
+            Config.log( "人员信息列表请求完毕！" );
             _this.getPersonInfoList._isOk = true;
             refresh();
         } );
 
         this.getDxfObj( function () {
-            console.info( "DXF文件请求完毕！" );
+            Config.log( "DXF文件请求完毕！" );
             _this.getDxfObj._isOk = true;
             refresh();
         } );
         this.getFont( function () {
-            console.info( "字体文件请求完毕！" );
+            Config.log( "字体文件请求完毕！" );
             _this.getFont._isOk = true;
             refresh();
         } );
@@ -175,7 +179,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
             if ( _this.getFont._isOk !== true ) {
                 return;
             }
-            console.info( "数据准备完毕！" );
+            Config.log( "数据准备完毕！" );
             callback();
         }
 
@@ -281,7 +285,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         if ( name !== undefined ) {
             return name;
         }
-        console.info( "未获取到【" + id + "】对应的名称，同步请求人员信息列表.." );
+        Config.log( "未获取到【" + id + "】对应的名称，同步请求人员信息列表.." );
 
         this.getPersonInfoList( null, true );
         
@@ -323,6 +327,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
     /**
      * @description 获取颜色
      * @return {String}
+     * @public
      */
     Config.getColor = function () {
         var
@@ -340,6 +345,29 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         }
 
         return _colorList[ _colorList.index ];
+    };
+
+
+    /**
+     * @description 日志
+     * @param content
+     * @public
+     */
+    Config.log = function ( content ) {
+        var
+            date = new Date(),
+            hours = date.getHours(),
+            minutes = date.getMinutes(),
+            seconds = date.getSeconds(),
+            milliseconds = date.getMilliseconds(),
+            time
+        ;
+
+        milliseconds = ( "   " + milliseconds ).slice(-3);
+
+        time = hours + "时" + minutes + "分" + seconds + "秒 " + milliseconds + "毫秒: ";
+
+        console.info( time, content );
     };
 
     return Config;

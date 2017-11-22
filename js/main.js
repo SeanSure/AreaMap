@@ -36,30 +36,17 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
         // 初始化
         AreaMap.init( options, function () {
 
-            //
-            // var
-            //     step = 10,
-            //     count = 0
-            // ;
-            // window.setInterval( function () {
-            //     AreaMap.setLocationTag( {
-            //         cmd: 1,
-            //         id: "56789",
-            //         x: 330000/10 + step * count,
-            //         y: -330000/10 + step * count
-            //     } );
-            //     count++;
-            // }, 60 );
-
-
             // 设置位置标签
-
             AreaMap.setLocationTag( { cmd: 1, id: "56780", x: 336274/10, y: -331342/10 } );
             AreaMap.setLocationTag( { cmd: 1, id: "56782", x: 340274/10, y: -331342/10 } );
             AreaMap.setLocationTag( { cmd: 1, id: "56786", x: 344274/10, y: -331342/10 } );
             AreaMap.setLocationTag( { cmd: 1, id: "56781", x: 336274/10, y: -335342/10 } );
             AreaMap.setLocationTag( { cmd: 1, id: "56783", x: 340274/10, y: -335342/10 } );
             AreaMap.setLocationTag( { cmd: 1, id: "56787", x: 344274/10, y: -335342/10 } );
+
+            $areaMap.on( "clickedCanvas", function ( event, pos ) {
+                AreaMap.setLocationTag( { cmd: 2, id: currentPersonId, x: pos.x / 10, y: pos.y / 10 } );
+            } ) ;
 
         } );
 
@@ -70,9 +57,8 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
             currentPersonId = data.id;
         } );
 
-        $areaMap.on( "clickedCanvas", function ( event, pos ) {
-            AreaMap.setLocationTag( { cmd: 2, id: currentPersonId, x: pos.x / 10, y: pos.y / 10 } );
-        } ) ;
+
+
 
 
     } );

@@ -1,43 +1,6 @@
 /**
  * @fileoverview 区域地图，用于显示位置坐标
  *
- *      AreaMap.init()：初始化
- *      AreaMap.diplay()：用three.js显示解析后的DXF文件
- *      AreaMap.setLocationTag( { id: String, x: Number, y: Number, cmd: Number} )：标志坐标
- *
- *      当人离开（cmd=0）或第一次出现（cmd=1）时，会请求 id到name 的映射表
- *
- * -------------------------- 就是显示人的位置的一个东西 -------------------------
- *
- *   1. 使用Three.js显示dxf文件（cad图）的内容
- *
- *       1）请求 dxf文件（cad图），并解析成JS对象 jsonData
- *       2）Three.js 将 jsonData 渲染成 2D图
- *
- *   2. 将服务器发送过来的人的坐标(posData)显示在 2D图 上
- *
- *       1）posData 的格式
- *
- *           {
- *               // 人的ID
- *               id: Number,
- *               // 坐标类型：0 - 人离开了；1 - 人第一次出现；2 - 人移动了。
- *               cmd: Number,
- *               // 坐标
- *               x: Number,
- *               y: Number,
- *           }
- *
- *       2）根据 posData ，在 2D图 上显示人的位置标签
- *
- *   3. 其他
- *
- *       1）ID到人名的映射表
- *
- *           人离开以及第一次出现时，都会去请求
- *
- *       2）待续
- *
  * @link https://github.com/forwardNow/AreaMap
  * @author 吴钦飞
  */
@@ -227,6 +190,7 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
             AreaMap._mouse.y = -( (event.pageY - offsetY) / height  ) * 2 + 1;
         } ).on( "click", function () {
             if ( AreaMap._intersected && AreaMap._intersected.material.color.getHex() === 0xff746f ) {
+                /** @event clickedPersion */
                 $target.trigger( "clickedPersion", AreaMap._intersected._pkuData );
             }
         } );
@@ -330,28 +294,28 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
 
     };
 
-
     /**
      * @description 创建 定位标签
-     * @param opts {{ id: String, x: Number, y: Number}}
+     * @param pos {{ id: String, x: Number, y: Number}}
      */
-    AreaMap.createLocationTag = function ( opts ) {
+    AreaMap.createLocationTag = function ( pos ) {
         var
             locationTag
         ;
 
-        if ( this.LocationTagCache.get( opts.id ) ) {
-            this.updateLocationTag( opts );
+        if ( this.LocationTagCache.get( pos.id ) ) {
+            this.updateLocationTag( pos );
             return;
         }
-        locationTag = new LocationTag( this.scene, opts );
+        locationTag = new LocationTag( this.scene, pos );
 
         locationTag.create();
 
-        locationTag.update( opts );
+        locationTag.update( pos );
 
-        this.LocationTagCache.set( opts.id, locationTag );
+        this.LocationTagCache.set( pos.id, locationTag );
 
+        Config.getPersonInfoList();
     };
 
     /**
@@ -360,35 +324,41 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
      *      在 当前坐标 和 目标坐标 之间，添加足够多的坐标 以形成“补间动画”。
      *      此方法只是将位置坐标压入位置队列，具体移动在 _animate() 中完成。
      *
-     * @param opts {{ id: String, x: Number, y: Number}}
+     * @param pos {{ id: String, x: Number, y: Number}}
      */
-    AreaMap.updateLocationTag = function ( opts ) {
+    AreaMap.updateLocationTag = function ( pos ) {
         var
-            locationTag = this.LocationTagCache.get( opts.id ),
+            locationTag = this.LocationTagCache.get( pos.id ),
             startPos, endPos
 
         ;
         if ( ! locationTag ) {
-            this.createLocationTag( opts );
+            this.createLocationTag( pos );
             return;
         }
 
-        // locationTag.update( opts );
+        // locationTag.update( pos );
 
         startPos = {
-            id: opts.id,
+            id: pos.id,
             x: locationTag.x,
             y: locationTag.y,
             cmd: 2
         };
 
-        endPos = opts;
+        endPos = pos;
         endPos.cmd = 2;
 
-        this.addTween( startPos, endPos );
+        this._addTween( startPos, endPos );
     };
 
-    AreaMap.addTween = function ( startPos, endPos ) {
+    /**
+     * @description 在两个坐标点之间 添加 “补间动画”
+     * @param startPos {{ id: String, x: Number, y: Number}} 开始坐标
+     * @param endPos {{ id: String, x: Number, y: Number}} 结束坐标
+     * @private
+     */
+    AreaMap._addTween = function ( startPos, endPos ) {
         var
             id = startPos.id,
             posList = [],
@@ -412,6 +382,10 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
 
     };
 
+    /**
+     * @description 队列缓存
+     * @private
+     */
     AreaMap._QueueCache = {
         /**
          * @description 保存位置坐标
@@ -423,7 +397,7 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
          * @description 弹出开头的坐标，
          * @param id {String}
          */
-        shift: function ( id ) {
+        shiftQueue: function ( id ) {
             var
                 queue = this.getQueue( id )
             ;
@@ -433,8 +407,9 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
         },
         /**
          * @description 弹出每一个队列的头一个坐标
+         * @return {Array}
          */
-        shiftAll: function () {
+        shiftEachQueue: function () {
             var
                 id,
                 queueCache = this.queueCache,
@@ -445,7 +420,7 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
                 if ( ! queueCache.hasOwnProperty( id ) ) {
                     continue;
                 }
-                pos = this.shift( id );
+                pos = this.shiftQueue( id );
                 if ( pos ) {
                     list.push( pos );
                 }
@@ -453,7 +428,7 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
             return list;
         },
         /**
-         * @description
+         * @description 添加位置列表
          * @param id {String}
          * @param posList {Array}
          */
@@ -479,14 +454,14 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
             i, len,
             pos
         ;
-        posList = this._QueueCache.shiftAll();
+        posList = this._QueueCache.shiftEachQueue();
 
         for ( i = 0, len = posList.length; i < len; i++ ) {
             pos = posList[ i ];
             if ( pos ) {
                 locationTag = this.LocationTagCache.get( pos.id );
                 pos.cmd = 2;
-                console.info( "(" + pos.x * 10 + ", " + pos.y * 10 + ")" );
+                // Config.log( "(" + pos.x * 10 + ", " + pos.y * 10 + ")" );
                 locationTag.update( pos );
             }
         }
@@ -495,20 +470,22 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
 
     /**
      * @description 销毁
-     * @param opts {{ id: String, x: Number, y: Number}}
+     * @param pos {{ id: String, x: Number, y: Number }}
      */
-    AreaMap.destroyLocationTag = function ( opts ) {
+    AreaMap.destroyLocationTag = function ( pos ) {
         var
-            locationTag = this.LocationTagCache.get( opts.id )
+            locationTag = this.LocationTagCache.get( pos.id )
         ;
         if ( ! locationTag ) {
-            console.warn( "【" + opts.id + "】不存在！" );
+            console.warn( "【" + pos.id + "】不存在！" );
             return;
         }
 
         locationTag.destroy();
 
-        this.LocationTagCache.remove( opts.id );
+        this.LocationTagCache.remove( pos.id );
+
+        Config.getPersonInfoList();
     };
 
 
