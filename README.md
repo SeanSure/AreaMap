@@ -96,8 +96,6 @@ xRate: 10,
 
 /** 实际的Y坐标 与 请求的Y坐标 比 */
 yRate: 10,
-
-
 ```
 
 
@@ -126,7 +124,7 @@ AreaMap.setLocationTag( position )
 ```
 
 ```
-$target.on( "clickedPersion", function ( position ) {
+$target.on( "clickedPersion", function ( event, position ) {
     console.info( position.id ); //=> "56789"
 } );
 ```
