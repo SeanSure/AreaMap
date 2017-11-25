@@ -32,6 +32,74 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
 
         options = $areaMap.data( "options" );
 
+        /**
+         * @description 将服务器返回的数据转换成需要的数据
+         * @example
+         *      将 “data/personInfoListData_2.json” 转换成 “data/personInfoListData.json”
+         * @param personInfoDic
+         */
+        options.handlePersonInfoResponse = function ( personInfoDic ) {
+            var
+                tagId,
+                personInfo,
+                fmtPersonInfo,
+                type,
+                objtype,
+                peopleSex,
+                fmtPersonInfoDic = {}
+            ;
+            for ( tagId in personInfoDic ) {
+                if ( ! personInfoDic.hasOwnProperty( tagId ) ) {
+                    continue;
+                }
+                personInfo = personInfoDic[ tagId ];
+
+                objtype = personInfo.objtype;
+                peopleSex = personInfo.peopleSex;
+
+                // 1010：办案民警，1020：办案协警
+                // 2010：嫌疑人
+                // 2020：律师，2030：监护人，9000：其他人员
+                if ( objtype.indexOf( "1010" ) !== -1 ) {
+                    type = "police_";
+                }
+                else if ( objtype.indexOf( "1020" ) !== -1 ) {
+                    type = "police_";
+                }
+                else if ( objtype.indexOf( "2010" ) !== -1 ) {
+                    type = "suspect_";
+                }
+                else if ( objtype.indexOf( "2020" ) !== -1 ) {
+                    type = "ordinary_";
+                }
+                else if ( objtype.indexOf( "2030" ) !== -1 ) {
+                    type = "ordinary_";
+                }
+                else if ( objtype.indexOf( "9000" ) !== -1 ) {
+                    type = "ordinary_";
+                }
+                else {
+                    type = "ordinary_";
+                }
+
+                if ( peopleSex === "2" || peopleSex === 2 ) {
+                    type += "woman";
+                } else {
+                    type += "man";
+                }
+
+                fmtPersonInfo = {
+                    id: tagId,
+                    name: personInfo.peopleName || tagId,
+                    type: type
+                };
+
+                fmtPersonInfoDic[ tagId ] = fmtPersonInfo;
+            }
+
+            return fmtPersonInfoDic;
+        };
+
         // 初始化
         AreaMap.init( options, function () {
 

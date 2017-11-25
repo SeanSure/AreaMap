@@ -33,9 +33,11 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         /** 人员信息列表 - URL */
         personInfoListUrl: null,
         /** 人员信息列表 - 集合 */
-        _personInfoListDic: {
+        _personInfoDic: {
             // "56789": { "id": "56789", "name": "吴钦飞", "type": "ordinary_man" },
         },
+        /** 人员信息列表 - 处理服务器响应，将其处理成上述格式 */
+        handlePersonInfoResponse: null,
 
         /** 人 - 网格对象 - 宽度 */
         personMeshWidth: 1000,
@@ -259,8 +261,15 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
             cache: false,
             dataType: "json"
         } ).done( function ( responseData ) {
+            var
+                data
+            ;
             if ( responseData && responseData.success === true ) {
-                _this._personInfoListDic = responseData.data;
+                data = responseData.data;
+                if ( $.isFunction( Config.handlePersonInfoResponse ) ) {
+                    data = Config.handlePersonInfoResponse( data );
+                }
+                _this._personInfoDic = data;
                 callback && callback();
             }
             else {
@@ -321,7 +330,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
      * @public
      */
     Config.getPersonInfoById = function ( id ) {
-        return this._personInfoListDic[ id ] || {};
+        return this._personInfoDic[ id ] || {};
     };
 
     /**
