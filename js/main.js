@@ -40,14 +40,29 @@ define( [ "jquery", "./areamap/areaMap" ], function ( $, AreaMap) {
          */
         options.handlePersonInfoResponse = function ( personInfoDic ) {
             var
+                i,
+                len,
                 tagId,
                 personInfo,
+                personInfoDicTemp,
                 fmtPersonInfo,
                 type,
                 objtype,
                 peopleSex,
                 fmtPersonInfoDic = {}
             ;
+
+            // 如果是数组，则将其进行转换
+            if ( $.isArray( personInfoDic ) ) {
+                personInfoDicTemp = {};
+                for ( i = 0, len = personInfoDic.length; i < len; i++ ) {
+                    personInfo = personInfoDic[ i ];
+                    tagId = personInfo.tagId;
+                    personInfoDicTemp[ tagId ] = personInfo;
+                }
+                personInfoDic = personInfoDicTemp;
+            }
+
             for ( tagId in personInfoDic ) {
                 if ( ! personInfoDic.hasOwnProperty( tagId ) ) {
                     continue;
