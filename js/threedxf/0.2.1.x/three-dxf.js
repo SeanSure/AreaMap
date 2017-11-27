@@ -211,12 +211,12 @@ var ThreeDxf;
         // FIX 暴露出去
         this.camera = camera;
 
-        var renderer = this.renderer = new THREE.WebGLRenderer();
+        var renderer = this.renderer = new THREE.WebGLRenderer({ alpha: true });
         // FIX
         renderer.setPixelRatio( window.devicePixelRatio );
 
         renderer.setSize(width, height);
-        renderer.setClearColor(0xfffffff, 1);
+        // renderer.setClearColor(0xfffffff, 1);
 
         // FIX 暴露出去
         this.renderer = renderer;
