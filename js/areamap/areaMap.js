@@ -282,8 +282,7 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
                 break;
             }
             // 创建（第一次出现）
-            case 1:
-            case 3:{
+            case 1: {
                 this.createLocationTag( data );
                 break;
             }
