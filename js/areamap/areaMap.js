@@ -276,12 +276,14 @@ define( [ "jquery", "./locationTag", "./config", "threedxf" ], function ( $, Loc
 
         switch ( data.cmd ) {
             // 离开
-            case 0: {
+            case 0:
+            case 4: {
                 this.destroyLocationTag( data );
                 break;
             }
             // 创建（第一次出现）
-            case 1: {
+            case 1:
+            case 3:{
                 this.createLocationTag( data );
                 break;
             }
