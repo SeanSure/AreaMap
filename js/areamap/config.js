@@ -128,7 +128,8 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
             pictureUrl,
             personPictureSet = this.personPictureSet,
             humanTextureSet = this._personTextureSet,
-            personPictureDirectory = this.personPictureDirectory
+            personPictureDirectory = this.personPictureDirectory,
+            textureLoader = new THREE.TextureLoader()
         ;
 
         for ( humanType in personPictureSet ) {
@@ -137,7 +138,12 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
             }
             pictureName = personPictureSet[ humanType ];
             pictureUrl = personPictureDirectory + pictureName;
-            humanTextureSet[ humanType ] = new THREE.TextureLoader().load( pictureUrl );
+            +function ( humanType ) {
+                textureLoader.load( pictureUrl, function ( texture ) {
+                    humanTextureSet[ humanType ] = texture;
+                } );
+            }( humanType );
+
         }
 
     };
@@ -296,7 +302,7 @@ define( [ "jquery", "threedxf" ], function ( $ ) {
         }
         Config.log( "未获取到【" + id + "】对应的名称，同步请求人员信息列表.." );
 
-        this.getPersonInfoList( null, true );
+        // this.getPersonInfoList( null, true );
         
         name = this.getPersonInfoById( id ).name;
 
